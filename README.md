@@ -22,7 +22,6 @@ OrchestrationLLMs implements a sophisticated agent-based architecture where:
 - **Sequential tool execution**: Run dependent tools one after another
 - **Parallel tool execution**: Execute multiple tools concurrently
 - **Agent delegation**: Ask other agents for help via `ASK_AGENT`
-- **Human interaction**: Request input with `ASK_QUESTION`
 - **Task finalization**: Complete workflows with `FINALIZE_TASK`
 
 ### 🛠️ Tool Integration

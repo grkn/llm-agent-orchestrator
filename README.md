@@ -184,7 +184,6 @@ Agents communicate using structured JSON responses:
 | `RUN_TOOL_SEQUENTIAL` | Execute tools one by one, passing results forward | `toolNames`, `inputs` |
 | `RUN_TOOL_PARALLEL` | Execute multiple tools concurrently | `toolNames`, `inputs` |
 | `ASK_AGENT` | Delegate task to another agent | `agentName`, `answer` |
-| `ASK_QUESTION` | Request input from human user | `answer` |
 | `FINALIZE_TASK` | Complete the workflow | `answer` |
 
 ## Built-in Tools

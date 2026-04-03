@@ -18,42 +18,48 @@ import java.util.logging.Logger;
 public class AgentOrchestrator {
     private static final Logger logger = Logger.getLogger(AgentOrchestrator.class.getName());
     public static final String mainPrompt= """
-                        # Your Role and Goal
+                       Your Role and Goal:
                         %s
 
-                        # Available Tools
+                       Available Tools:
                         %s
 
-                        # Current Task
+                       Current Sub Task:
                         %s
 
                         # Decision Framework
 
                         You must respond with ONLY a valid JSON object. Analyze the current task and choose ONE action:
 
-                        ## Action Types
+                        Available Actions:
+                        - RUN_TOOL_SEQUENTIAL
+                        - RUN_TOOL_PARALLEL
+                        - ASK_AGENT
+                        - FINALIZE_TASK
 
-                        1. **RUN_TOOL_SEQUENTIAL** - Execute tools one after another when:
+                        Action Types Description:
+
+                        1. RUN_TOOL_SEQUENTIAL: - Execute tools one after another when:
                            - Output of one tool is needed as input for the next
                            - Tasks have dependencies
                            - Example: Read file → Process content → Write result
 
-                        2. **RUN_TOOL_PARALLEL** - Execute multiple tools concurrently when:
+                        2. RUN_TOOL_PARALLEL: - Execute multiple tools concurrently when:
                            - Tools are independent and don't depend on each other
                            - Multiple similar operations needed simultaneously
                            - Example: Read multiple files at once, write to multiple locations
 
-                        3. **ASK_AGENT** - Delegate to another agent when:
+                        3. ASK_AGENT: - Delegate to another agent when:
                            - Task requires specialized knowledge/skills of another agent
                            - You need information or help from another agent
                            - Collaboration is needed to complete the task
 
-                        4. **FINALIZE_TASK** - Complete the workflow when:
+                        4. FINALIZE_TASK: - Complete the workflow when:
                            - The main goal has been fully accomplished
                            - All work is done and you have the final answer
                            - No further actions are needed
 
-                        ## Important Rules
+                        Important Rules:
 
                         - Always keep the main goal in focus, even when handling sub-tasks
                         - If you receive a new question or work item, treat it as a priority sub-task
@@ -61,7 +67,7 @@ public class AgentOrchestrator {
                         - Only use tools that are listed in the "Available Tools" section
                         - For ASK_AGENT, specify the target agent name and your question in the "answer" field
 
-                        ## Required JSON Response Format
+                        Required JSON Response Format:
 
                         Return ONLY valid JSON with this exact structure:
 
@@ -76,41 +82,12 @@ public class AgentOrchestrator {
 
                         ## Field Usage Guide
 
-                        - **action** (required): Must be one of the four action types
-                        - **toolNames** (required for RUN_TOOL_*): Array of tool names to execute
-                        - **inputs** (required for RUN_TOOL_*): Array of parameter objects, one per tool
-                        - **answer** (required for ASK_AGENT, FINALIZE_TASK): Your message, question, or final result
-                        - **agentName** (required for ASK_AGENT): Name of the agent you want to delegate to
-                        - **toolOutput** (system-managed): Tool execution results (you will see this in subsequent iterations)
-
-                        ## Examples
-
-                        Sequential tool execution:
-                        {
-                          "action": "RUN_TOOL_SEQUENTIAL",
-                          "toolNames": ["READ_FILE", "SEARCH_PATTERN_IN_FILE"],
-                          "inputs": [{"path": "C:\\\\repo\\\\App.java"}, {"filePath": "C:\\\\repo\\\\App.java", "pattern": "main"}]
-                        }
-
-                        Parallel tool execution:
-                        {
-                          "action": "RUN_TOOL_PARALLEL",
-                          "toolNames": ["READ_FILE", "READ_FILE", "READ_FILE"],
-                          "inputs": [{"path": "file1.txt"}, {"path": "file2.txt"}, {"path": "file3.txt"}]
-                        }
-
-                        Delegating to another agent:
-                        {
-                          "action": "ASK_AGENT",
-                          "agentName": "architect",
-                          "answer": "What design pattern should I use for the authentication module?"
-                        }
-
-                        Finalizing the task:
-                        {
-                          "action": "FINALIZE_TASK",
-                          "answer": "Calculator application successfully implemented with JavaFX GUI. All features tested and working."
-                        }
+                        - action (required): Must be one of the four action types
+                        - toolNames (required for RUN_TOOL_*): Array of tool names to execute
+                        - inputs (required for RUN_TOOL_*): Array of parameter objects, one per tool
+                        - answer (required for ASK_AGENT, FINALIZE_TASK): Your message, question, or final result
+                        - agentName (required for ASK_AGENT): Name of the agent you want to delegate to
+                        - toolOutput (system-managed): Tool execution results (you will see this in subsequent iterations)
 
                         Now, analyze the current task and respond with your JSON decision.
                         """;

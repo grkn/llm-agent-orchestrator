@@ -31,32 +31,12 @@ public class OrchestrationExample {
     private static void implementationWorkflow() throws Exception {
         System.out.println("=== Code Workflow ===\n");
 
-        Agent customer = AgentBuilder.create("customer")
-                .prompt("""
-                        You are a customer.
-                        Product owner will ask questions to clarify requirements.
-                        You will answer them as customer point of view.
-                        You can choose the best answer from multiple options.
-                        
-                        Agents:
-                        - product_owner
-                        - developer
-                        - architect
-                        - tester
-                        - customer
-                        """)
-                .onEnter(context -> {
-                    System.out.println("[product_owner] product_owner analyzes requirement");
-                })
-                .build();
-
         Agent productOwner = AgentBuilder.create("product_owner")
                 .prompt("""
                         You are a senior technical product owner.
                         You will analyze requirement and divide it into sub tasks and sub problems.
                         Sub problems will be asked to architect agent to get technical details.
                         Developer agent is going to implement it.
-                        if you have a question, you can ask question to customer agent.
                         
                         Goal:
                         You will implement a calculator tool that can perform basic arithmetic operations.
@@ -89,6 +69,7 @@ public class OrchestrationExample {
                         - If you have any question to architect, use ASK_AGENT action with "answer" field for question
                         - If you have question or work needs to be done, prioritize it and accept as temporary goal without losing main goal.
                         - Finalize task and return final result only.
+                        - Review process must to be done with architect agent
                         
                         Your goal is to complete the requested engineering task using available tools.
                         
@@ -112,7 +93,7 @@ public class OrchestrationExample {
                 .prompt("""
                         You are a senior software architect.
                         You get requirements from product owner and you will design a architecture for implementation
-                        Your responsibility is to design a technical architecture for implementation.
+                        Your responsibility is to design a technical architecture for implementation and code review.
                         After that you will ask developer agent to implement it.
                         
                         Rule:
@@ -137,8 +118,11 @@ public class OrchestrationExample {
                         You are a senior software java test engineer.
                         You will write end to end tests for existing implementation with selenium and bdd approach will be used.
                         If you have a question or bug, you can communicate with developer agent or architect agent for any improvement.
-                        
+                       
                         Your goal is to complete the requested engineering task using available tools.
+                        
+                        Rule:
+                        - Review process must to be done with architect agent
                         
                         Repository path:
                         - C:\\repo
@@ -155,13 +139,11 @@ public class OrchestrationExample {
                 })
                 .build();
 
-
-        List<Agent> agents = Arrays.asList(productOwner, customer, developer, architect, tester);
+        List<Agent> agents = Arrays.asList(productOwner,  developer, architect, tester);
 
         AgentOrchestrator orchestrator = AgentOrchestrator.builder(agents)
                 .initialAgent("product_owner")
                 .addTransition("product_owner", "architect")
-                .addTransition("product_owner", "customer")
                 .addTransition("product_owner", "developer")
                 .addTransition("architect", "developer")
                 .addTransition("architect", "tester")

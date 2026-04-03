@@ -51,4 +51,5 @@ public interface Agent {
 
     String toolDescription();
 
+    String getPrompt();
 }

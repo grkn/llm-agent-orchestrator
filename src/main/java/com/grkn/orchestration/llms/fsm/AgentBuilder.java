@@ -9,6 +9,9 @@ import com.grkn.orchestration.llms.properties.Properties;
 import com.grkn.orchestration.llms.strategy.ActionStrategy;
 import com.grkn.orchestration.llms.strategy.ActionStrategyFactory;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -133,10 +136,13 @@ public class AgentBuilder {
                 ApiResponse apiResponse = null;
                 Action action = Action.ASK_AGENT;
                 // TO make it robust retrying will handle invalid action
+                String mainPrompt = AgentOrchestrator.mainPrompt.formatted(prompt, toolDescription(),
+                        message.getPayload() != null ? message.getPayload().getAnswer() : null
+                        , availableAgents(context)
+                        , findFinalizedAgents(message));
                 while (actionRetry) {
                     apiResponse = client.execute(Properties.INSTANCE,
-                            AgentOrchestrator.mainPrompt.formatted(prompt, toolDescription(),
-                                    message.getPayload() != null ? message.getPayload().getAnswer() : null),
+                            mainPrompt,
                             message.getPayload() != null ? message.getPayload().getResponseId() : null);
                     try {
                         action = Action.valueOf(apiResponse.getAction());
@@ -149,6 +155,24 @@ public class AgentBuilder {
                 ActionStrategy strategy = ActionStrategyFactory.getStrategy(action);
                 message.setPayload(apiResponse);
                 return strategy.execute(message, apiResponse , this);
+            }
+
+            private String findFinalizedAgents(Message message) {
+                Set<String> finalizedAgents = (Set<String>) message.getMetadata()
+                        .getOrDefault("finalizedAgents", new HashSet<>());
+                StringBuilder sb = new StringBuilder();
+                for (String agent : finalizedAgents) {
+                    sb.append("-").append(agent).append("\n");
+                }
+                return sb.toString();
+            }
+
+            private String availableAgents(AgentContext context) {
+                StringBuilder sb = new StringBuilder();
+                for (Agent allAgent : context.getStateMachine().getAllAgents()) {
+                    sb.append("-").append(allAgent.getName()).append("\n");
+                }
+                return sb.toString();
             }
 
             @Override

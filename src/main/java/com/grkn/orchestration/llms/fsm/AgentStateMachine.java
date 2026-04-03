@@ -219,6 +219,11 @@ public class AgentStateMachine {
         return agentTransitions != null ? new HashSet<>(agentTransitions) : Collections.emptySet();
     }
 
+
+    public Agent getInitialAgent() {
+        return initialAgent;
+    }
+
     /**
      * Resets the state machine to the initial agent.
      */
@@ -262,6 +267,10 @@ public class AgentStateMachine {
      */
     public interface TransitionListener {
         void onTransition(Agent from, Agent to);
+    }
+
+    public AgentContext getContext() {
+        return context;
     }
 
     @Override

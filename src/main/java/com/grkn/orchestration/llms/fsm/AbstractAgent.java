@@ -56,6 +56,7 @@ public abstract class AbstractAgent implements Agent {
         return "Agent{name='" + name + "'}";
     }
 
+    @Override
     public String getPrompt() {
         return prompt;
     }

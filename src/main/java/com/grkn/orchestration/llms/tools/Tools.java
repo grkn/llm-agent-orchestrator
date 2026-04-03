@@ -8,13 +8,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Tool
 public class Tools {
 
     @Tool(name = "READ_FILE", description = """
-            Purpose: Read a file with given path
+            Read a file with given path
             """)
     public String readFile(@ToolParameter(description = """
             Payload is path you need to read
@@ -27,11 +29,12 @@ public class Tools {
     }
 
     @Tool(name = "WRITE_FILE", description = """
-            Purpose: Write a file with given path
+            Write a file with given path
             """)
     public String writeFile(@ToolParameter(description = """
             Composite payload with filePath and content
             """) WritePayload writePayload) throws IOException {
+        createDirectory(writePayload.getAbsolutePath());
         File f = new File(writePayload.getAbsolutePath());
         FileOutputStream fileOutputStream = new FileOutputStream(f);
         fileOutputStream.write(writePayload.getContent().getBytes(StandardCharsets.UTF_8));
@@ -40,7 +43,7 @@ public class Tools {
     }
 
     @Tool(name = "LIST_FILE", description = """
-            Purpose: List files with given path
+            List files with given path
             """)
     public String listFiles(@ToolParameter(description = """
             absolute file path you need to list
@@ -58,7 +61,7 @@ public class Tools {
     }
 
     @Tool(name = "SEARCH_PATTERN_IN_FILE", description = """
-            Purpose: Search Pattern inside a file with given path and returns found file's path
+            Search Pattern inside a file with given path and returns found file's path
             """)
     public String searchPatternInFile(@ToolParameter(description = """
             Search Pattern payload
@@ -72,7 +75,7 @@ public class Tools {
     }
 
     @Tool(name = "REWRITE_FILE", description = """
-            Purpose: Update file content by rewriting with given content and file's absolute path.
+            Update file content by rewriting with given content and file's absolute path.
             """)
     public String rewrite(@ToolParameter(description = """
             Rewrite file with given path and new content
@@ -88,7 +91,7 @@ public class Tools {
     }
 
     @Tool(name = "DELETE_FILE", description = """
-            Purpose: Delete unnecessary file with given path
+            Delete unnecessary file with given path
             """)
     public String deleteFile(@ToolParameter(description = """
             Payload is path you need to delete
@@ -100,7 +103,7 @@ public class Tools {
     }
 
     @Tool(name = "MVN_CLEAN_INSTALL", description = """
-            Purpose: Run mvn clean install to check code builds with tests
+            Run mvn clean install to check code builds with tests
             """)
     public String mvnCleanInstall(@ToolParameter(description = """
             Path of root project folder
@@ -138,6 +141,22 @@ public class Tools {
                 || value.endsWith(".yaml")
                 || value.endsWith(".properties")
                 || value.endsWith(".md");
+    }
+
+    private static void createDirectory(String filePath) {
+        Path path = Paths.get(filePath);
+        List<String> possiblePaths = new LinkedList<>();
+        while (path.getParent() != null) {
+            possiblePaths.add(path.toString());
+            path = path.getParent();
+        }
+
+        for (int i = possiblePaths.size() - 1; i >=1 ; i--) {
+            File tmp = new File(possiblePaths.get(i));
+            if (!tmp.exists()) {
+                tmp.mkdir();
+            }
+        }
     }
 
 }

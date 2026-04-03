@@ -39,15 +39,19 @@ public class OrchestrationExample {
                         Developer agent is going to implement it.
                         
                         Goal:
-                        You will implement a calculator tool that can perform basic arithmetic operations.
-                        use JavaFX to create a GUI for the calculator.
+                        You will implement Spring Boot application with Java 17 and Spring Boot 3.0.
+                        You have to implement a REST API with Spring WebFlux and Spring Data JPA.
+                        You have to use h2 database for development and production.
+                        You have to create Controller, Service, Repository, and DTO classes.
+                        You have to implement CRUD operations for a simple entity.
                         
-                        Agents:
+                        Current agent:
                         - product_owner
+                        
+                        Available Agents:
                         - developer
                         - architect
                         - tester
-                        - customer
                         """)
                 .onEnter(context -> {
                     System.out.println("[product_owner] product_owner analyzes requirement");
@@ -76,12 +80,13 @@ public class OrchestrationExample {
                         Repository path:
                         - C:\\repo
                         
-                        Agents:
-                        - product_owner
+                        Current agent:
                         - developer
+                        
+                        Available Agents:
+                        - product_owner
                         - architect
                         - tester
-                        - customer
                         """)
                 .onEnter(context -> {
                     System.out.println("[developer] developer implements requirement");
@@ -90,6 +95,7 @@ public class OrchestrationExample {
 
         // Create Reviewer Agent
         Agent architect = AgentBuilder.create("architect")
+                .toolInstance(new Tools())
                 .prompt("""
                         You are a senior software architect.
                         You get requirements from product owner and you will design a architecture for implementation
@@ -100,12 +106,13 @@ public class OrchestrationExample {
                         - If you have any task to developer, use ASK_AGENT action with "answer" field for task
                         - Don't finalize task until developer agent will implement it.
                         
-                        Agents:
+                        Current agent:
+                        - architect
+                        
+                        Available Agents:
                         - product_owner
                         - developer
-                        - architect
                         - tester
-                        - customer
                         """)
                 .onEnter(context -> {
                     System.out.println("[architect] architect designs technical architecture");
@@ -127,15 +134,16 @@ public class OrchestrationExample {
                         Repository path:
                         - C:\\repo
                         
-                        Agents:
+                        Current agent:
+                        - tester
+                        
+                        Available Agents:
                         - product_owner
                         - developer
                         - architect
-                        - tester
-                        - customer
                         """)
                 .onEnter(context -> {
-                    System.out.println("[developer] tester implements end to end tests");
+                    System.out.println("[tester] tester implements end to end tests");
                 })
                 .build();
 

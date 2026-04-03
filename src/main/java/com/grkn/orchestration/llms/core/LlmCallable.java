@@ -8,8 +8,12 @@ import tools.jackson.core.json.JsonReadFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public class LlmCallable implements Callable<CallableResponse> {
@@ -18,6 +22,11 @@ public class LlmCallable implements Callable<CallableResponse> {
     private final ToolFinder toolFinder ;
     private final Object toolInstance;
     private static final ObjectMapper objectMapper;
+
+    private static final Set<Class<?>> WRAPPER_TYPES = Set.of(
+            Boolean.class, Character.class, Byte.class, Short.class,
+            Integer.class, Long.class, Float.class, Double.class, Void.class, String.class
+    );
 
     static {
         JsonMapper.Builder builder = JsonMapper.builder();
@@ -35,20 +44,30 @@ public class LlmCallable implements Callable<CallableResponse> {
     }
 
     @Override
-    public CallableResponse call() throws Exception {
+    public CallableResponse call() {
         Method toolMethod = toolFinder.find(toolName);
 
         if(toolMethod == null) {
             return new CallableResponse(null, false, toolName, "Tool not found");
         }
 
-        Class<?> instanceClassOfInput = Arrays.stream(toolMethod.getParameters()).filter(parameter ->
-                parameter.getDeclaredAnnotation(ToolParameter.class) != null).findFirst().orElseThrow().getType();
-        // Linked hashmap is converted to string then converted to instance
-        Object instance = objectMapper.readValue(objectMapper.writeValueAsString(input), instanceClassOfInput);
-        // Execution of tool method
-        Object result = toolMethod.invoke(toolInstance, instance);
+        Parameter instanceClassOfInput = Arrays.stream(toolMethod.getParameters()).filter(parameter ->
+                parameter.getDeclaredAnnotation(ToolParameter.class) != null).findFirst().orElseThrow();
+        Class<?> type = instanceClassOfInput.getType();
 
-        return new CallableResponse(result, true, toolName, null);
+        Object instance;
+        if(WRAPPER_TYPES.contains(type) || type.isPrimitive()) {
+            instance = ((LinkedHashMap<?, ?>) input).get(instanceClassOfInput.getName());
+        } else {
+            // Linked hashmap is converted to string then converted to instance
+            instance = objectMapper.readValue(objectMapper.writeValueAsString(input), type);
+        }
+        // Execution of tool method
+        try {
+            Object result = toolMethod.invoke(toolInstance, instance);
+            return new CallableResponse(result, true, toolName, null);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            return new CallableResponse(null, false, toolName, "Tool execution failed: " + e.getMessage());
+        }
     }
 }

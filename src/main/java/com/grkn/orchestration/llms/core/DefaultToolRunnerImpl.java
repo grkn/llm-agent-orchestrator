@@ -4,9 +4,6 @@ import com.grkn.orchestration.llms.dto.CallableResponse;
 import com.grkn.orchestration.llms.enums.Action;
 import com.grkn.orchestration.llms.fsm.AbstractAgent;
 import com.grkn.orchestration.llms.interfaces.ToolRunner;
-import tools.jackson.core.json.JsonReadFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,19 +17,13 @@ import java.util.concurrent.Future;
 public class DefaultToolRunnerImpl implements ToolRunner<List<CallableResponse>> {
 
     public final static ToolRunner<List<CallableResponse>> INSTANCE = new DefaultToolRunnerImpl();
-    private static final ObjectMapper objectMapper;
     private final ExecutorService executorService = Executors.newFixedThreadPool(50);
 
-    static {
-        JsonMapper.Builder builder = JsonMapper.builder();
-        for (JsonReadFeature value : JsonReadFeature.values()) {
-            builder.enable(value);
-        }
-        objectMapper = builder.build();
-    }
-
     @Override
-    public List<CallableResponse> run(Action action, List<String> toolNames,  List<Map<String,String>> inputs, AbstractAgent agent) throws InterruptedException {
+    public List<CallableResponse> run(Action action, List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent) throws InterruptedException {
+        if (toolNames.size() != inputs.size()) {
+            return List.of(new CallableResponse(null, false, "ToolRunner", "Tool names array and inputs array should be equal size"));
+        }
         return switch (action) {
             case RUN_TOOL_PARALLEL -> runParallel(toolNames, inputs, agent);
             case RUN_TOOL_SEQUENTIAL -> runSequential(toolNames, inputs, agent);
@@ -40,25 +31,16 @@ public class DefaultToolRunnerImpl implements ToolRunner<List<CallableResponse>>
         };
     }
 
-    private List<CallableResponse> runSequential(List<String> toolNames, List<Map<String,String>> inputs, AbstractAgent agent) {
-        LlmCallable callable = new LlmCallable(toolNames.getFirst(), inputs.getFirst(), agent);
-        Future<CallableResponse> future = executorService.submit(callable);
-        CallableResponse previous = getCallableResponseChain(toolNames, agent, future);
-        return List.of(previous);
-    }
-
-    private CallableResponse getCallableResponseChain(List<String> toolNames, AbstractAgent agent, Future<CallableResponse> future) {
-        LlmCallable callable;
-        CallableResponse previous = get(future, toolNames.getFirst());
-        for (int i = 1; i < toolNames.size(); i++) {
-            callable = new LlmCallable(toolNames.get(i), previous.getResponse(), agent);
-            future = executorService.submit(callable);
-            previous = get(future, toolNames.get(i));
+    private List<CallableResponse> runSequential(List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent) {
+        List<CallableResponse> responses = new ArrayList<>();
+        for (int i = 0; i < toolNames.size(); i++) {
+            LlmCallable callable = new LlmCallable(toolNames.get(i), inputs.get(i), agent);
+            responses.add(callable.call());
         }
-        return previous;
+        return responses;
     }
 
-    private List<CallableResponse> runParallel(List<String> toolNames, List<Map<String,String>> inputs, AbstractAgent agent)
+    private List<CallableResponse> runParallel(List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent)
             throws InterruptedException {
         Collection<LlmCallable> callables = createCallables(toolNames, inputs, agent);
         List<Future<CallableResponse>> futures = executorService.invokeAll(callables);
@@ -73,7 +55,7 @@ public class DefaultToolRunnerImpl implements ToolRunner<List<CallableResponse>>
         return result;
     }
 
-    private static Collection<LlmCallable> createCallables(List<String> toolNames, List<Map<String,String>> inputs, AbstractAgent agent) {
+    private static Collection<LlmCallable> createCallables(List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent) {
         Collection<LlmCallable> callables = new ArrayList<>();
 
         for (int i = 0; i < toolNames.size(); i++) {

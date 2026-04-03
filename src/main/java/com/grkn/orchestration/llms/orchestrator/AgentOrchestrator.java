@@ -9,6 +9,7 @@ import com.grkn.tool.library.core.DefaultToolManager;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -18,35 +19,37 @@ import java.util.logging.Logger;
 public class AgentOrchestrator {
     private static final Logger logger = Logger.getLogger(AgentOrchestrator.class.getName());
     public static final String mainPrompt= """
-                       Your Role and Goal:
+                        Your Role and Goal:
                         %s
 
-                       Available Tools:
+                        Only Available Tools:
                         %s
-
-                       Current Sub Task:
+                       
+                        
+                        Current Sub Task:
                         %s
-
-                        # Decision Framework
-
-                        You must respond with ONLY a valid JSON object. Analyze the current task and choose ONE action:
-
+                        
+    
+                        You must respond with ONLY a valid JSON object. Analyze the current task and choose ONE action in available actions:
+    
                         Available Actions:
                         - RUN_TOOL_SEQUENTIAL
                         - RUN_TOOL_PARALLEL
                         - ASK_AGENT
                         - FINALIZE_TASK
-
+                        
+                        
                         Action Types Description:
-
                         1. RUN_TOOL_SEQUENTIAL: - Execute tools one after another when:
-                           - Output of one tool is needed as input for the next
-                           - Tasks have dependencies
-                           - Example: Read file → Process content → Write result
+                           - Tools are independent and don't depend on each other
+                           - Multiple similar operations needed sequentially
+                           - Maximum 3 sequential toolName and inputs can be received at a time
+                           - Example: Read files sequentially, write one by one to locations sequentially
 
                         2. RUN_TOOL_PARALLEL: - Execute multiple tools concurrently when:
                            - Tools are independent and don't depend on each other
                            - Multiple similar operations needed simultaneously
+                           - Maximum 3 concurrent toolName and inputs can be received at a time
                            - Example: Read multiple files at once, write to multiple locations
 
                         3. ASK_AGENT: - Delegate to another agent when:
@@ -60,15 +63,14 @@ public class AgentOrchestrator {
                            - No further actions are needed
 
                         Important Rules:
-
                         - Always keep the main goal in focus, even when handling sub-tasks
                         - If you receive a new question or work item, treat it as a priority sub-task
                         - Choose the most efficient action based on the current situation
                         - Only use tools that are listed in the "Available Tools" section
                         - For ASK_AGENT, specify the target agent name and your question in the "answer" field
+                        - If the action is FINALIZE_TASK, ask available agents except current agent to analyze their tasks as well to finish the task or goal.
 
                         Required JSON Response Format:
-
                         Return ONLY valid JSON with this exact structure:
 
                         {
@@ -83,8 +85,8 @@ public class AgentOrchestrator {
                         ## Field Usage Guide
 
                         - action (required): Must be one of the four action types
-                        - toolNames (required for RUN_TOOL_*): Array of tool names to execute
-                        - inputs (required for RUN_TOOL_*): Array of parameter objects, one per tool
+                        - toolNames (required for RUN_TOOL_*): Array of tool names to execute . (maximum: 3 tool names)
+                        - inputs (required for RUN_TOOL_*): Array of parameter objects, one per tool (maximum: 3 inputs)
                         - answer (required for ASK_AGENT, FINALIZE_TASK): Your message, question, or final result
                         - agentName (required for ASK_AGENT): Name of the agent you want to delegate to
                         - toolOutput (system-managed): Tool execution results (you will see this in subsequent iterations)
@@ -123,7 +125,7 @@ public class AgentOrchestrator {
                 .metadata("iteration", 0)
                 .build();
         int iteration = 0;
-
+        Set<String> finalizedAgents = new java.util.HashSet<>();
         // Main orchestration loop
         while (iteration < maxIterations) {
             iteration++;
@@ -136,13 +138,27 @@ public class AgentOrchestrator {
             // Process message through current agent
 
             currentMessage = stateMachine.processMessage(currentMessage);
+            logger.info(stateMachine.getCurrentAgent().getName() + "'s interaction: " + currentMessage.getPayload().getAnswer());
 
             // Check if task is finalized
             if (isTaskComplete(currentMessage)) {
+                finalizedAgents.add(stateMachine.getCurrentAgent().getName());
+
                 if (enableLogging) {
-                    logger.info("Task completed successfully");
+                    logger.info(String.format(
+                            "Agent finalized: %s (%d/%d)",
+                            stateMachine.getCurrentAgent().getName(),
+                            finalizedAgents.size(),
+                            stateMachine.getAllAgents().size()
+                    ));
                 }
-                break;
+
+                if (finalizedAgents.size() == stateMachine.getAllAgents().size()) {
+                    if (enableLogging) {
+                        logger.info("All agents finalized. Task completed successfully.");
+                    }
+                    break;
+                }
             }
 
             // Check if we need to route to another agent

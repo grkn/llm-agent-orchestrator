@@ -1,6 +1,7 @@
 package com.grkn.orchestration.llms.fsm;
 
 import com.grkn.orchestration.llms.core.ChatGptClient;
+import com.grkn.orchestration.llms.dto.ApiResponse;
 import com.grkn.orchestration.llms.enums.Action;
 import com.grkn.orchestration.llms.interfaces.Client;
 import com.grkn.orchestration.llms.orchestrator.AgentOrchestrator;
@@ -10,12 +11,16 @@ import com.grkn.orchestration.llms.strategy.ActionStrategyFactory;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 /**
  * Builder for creating agents that extend AbstractAgent.
  * Provides a fluent API for defining agent behaviors without creating separate classes.
  */
 public class AgentBuilder {
+
+    private static final Logger logger = Logger.getLogger(AgentBuilder.class.getName());
+
     private String name;
     private String prompt;
     private Object toolClassInstance;
@@ -124,18 +129,32 @@ public class AgentBuilder {
 
             @Override
             public Message process(Message message, AgentContext context) throws Exception {
-                message.setPayload(client.execute(Properties.INSTANCE,
-                        AgentOrchestrator.mainPrompt.formatted(prompt, toolDescription(),
-                                message.getPayload() != null ? message.getPayload().getAnswer() : null),
-                                message.getPayload() != null ? message.getPayload().getResponseId() : null));
-                Action action = Action.valueOf(message.getPayload().getAction());
+                boolean actionRetry = true;
+                ApiResponse apiResponse = null;
+                Action action = Action.ASK_AGENT;
+                // TO make it robust retrying will handle invalid action
+                while (actionRetry) {
+                    apiResponse = client.execute(Properties.INSTANCE,
+                            AgentOrchestrator.mainPrompt.formatted(prompt, toolDescription(),
+                                    message.getPayload() != null ? message.getPayload().getAnswer() : null),
+                            message.getPayload() != null ? message.getPayload().getResponseId() : null);
+                    try {
+                        action = Action.valueOf(apiResponse.getAction());
+                        actionRetry = false;
+                    } catch (IllegalArgumentException e) {
+                        logger.info("Invalid action: " + apiResponse.getAction() + " retrying...");
+                    }
+                }
+
                 ActionStrategy strategy = ActionStrategyFactory.getStrategy(action);
-                return strategy.execute(message, message.getPayload(), this);
+                message.setPayload(apiResponse);
+                return strategy.execute(message, apiResponse , this);
             }
 
             @Override
             public String shouldTransition(Message message) {
                 // Type: agent name for next transition
+                // if there is noonext transition then it will stay in the same agent to think about the next action
                 return message.getType() == null ? this.getName() : message.getType();
             }
         };

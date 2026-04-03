@@ -66,7 +66,7 @@ public class OrchestrationExample {
                         Rules:
                         - Your tech stack is Java, Spring Boot, and PostgreSQL
                         - Analyze business requirements from the customer
-                        - Break down requirements into actionable tasks and user stories
+                        - Break down requirements into actionable tasks and give them to developer agent
                         - Coordinate with architect for technical feasibility and design
                         - Ensure developer understands implementation requirements
                         - Validate final deliverables meet customer expectations

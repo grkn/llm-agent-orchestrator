@@ -180,26 +180,10 @@ public class AgentOrchestrator {
                 if (stateMachine.getCurrentAgent().getName().equals(nextAgent) && finalizedAgents.contains(nextAgent)) {
                     nextAgent = chooseNotFinalizedAgent(stateMachine.getCurrentAgent(), finalizedAgents, stateMachine);
                     if (nextAgent.equals("NOT_FOUND")) {
-                        // Return back to goal provider to verify task completion
-
-                        Agent verifyTask = AgentBuilder.create("VerifyTask")
-                                .prompt("""
-                                        Give me proof as output that the task is done and provide the final answer for the main goal.
-                                        
-                                        Main Goal: %s""".formatted(stateMachine.getInitialAgent().getPrompt()))
-                                .build();
-                        Message process = verifyTask.process(currentMessage, stateMachine.getContext());
-                        if (process.getPayload() != null && process.getPayload().getAction() != null
-                            && Action.valueOf(process.getPayload().getAction()) != Action.FINALIZE_TASK) {
-                            finalizedAgents.clear();
-                            nextAgent = stateMachine.getInitialAgent().getName();
-                        } else {
-                            if (enableLogging) {
-                                logger.info("No available agents to route to. Task finished.");
-                            }
-                            break;
+                        if (enableLogging) {
+                            logger.info("No available agents to route to. Task finished.");
                         }
-                        currentMessage.setPayload(process.getPayload());
+                        break;
                     }
                 }
 

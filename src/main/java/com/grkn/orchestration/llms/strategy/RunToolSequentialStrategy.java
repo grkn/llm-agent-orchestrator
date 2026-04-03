@@ -34,6 +34,15 @@ public class RunToolSequentialStrategy implements ActionStrategy {
 
     @Override
     public Message execute(Message message, ApiResponse apiResponse, AbstractAgent abstractAgent) throws Exception {
+        if (abstractAgent.getToolClassInstance() == null) {
+            ApiResponse response = new ApiResponse();
+            response.setAction(Action.ASK_AGENT.name());
+            response.setAgentName(abstractAgent.getName());
+            response.setAnswer("I don't have any responsibility to use tools. Skipping the task");
+            message.setPayload(response);
+            return message;
+        }
+
         List<String> toolNames = apiResponse.getToolNames();
         List<Map<String, String>> inputs = apiResponse.getInputs();
 

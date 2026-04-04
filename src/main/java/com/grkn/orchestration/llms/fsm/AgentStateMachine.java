@@ -118,7 +118,7 @@ public class AgentStateMachine {
         Message response = currentAgent.process(message, context);
 
         // Check if the agent wants to transition
-        String nextAgentName = currentAgent.shouldTransition(response);
+        String nextAgentName = currentAgent.shouldTransition(response, context);
 
         if (nextAgentName != null && !nextAgentName.equals(currentAgent.getName())) {
             transitionTo(nextAgentName);

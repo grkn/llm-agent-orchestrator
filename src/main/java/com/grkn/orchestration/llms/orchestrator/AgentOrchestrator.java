@@ -2,9 +2,7 @@ package com.grkn.orchestration.llms.orchestrator;
 
 import com.grkn.orchestration.llms.dto.ApiResponse;
 import com.grkn.orchestration.llms.enums.Action;
-import com.grkn.orchestration.llms.fsm.Agent;
-import com.grkn.orchestration.llms.fsm.AgentStateMachine;
-import com.grkn.orchestration.llms.fsm.Message;
+import com.grkn.orchestration.llms.fsm.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -128,6 +126,7 @@ public class AgentOrchestrator {
                 .metadata("iteration", 0)
                 .metadata("finalizedAgents", new HashSet<>())
                 .build();
+
         int iteration = 0;
         Set<String> finalizedAgents = new HashSet<>();
         // Main orchestration loop
@@ -140,9 +139,11 @@ public class AgentOrchestrator {
             }
 
             // Process message through current agent
-
             currentMessage = stateMachine.processMessage(currentMessage);
-            logger.info(stateMachine.getCurrentAgent().getName() + "'s interaction: " + currentMessage.getPayload().getAnswer());
+
+            if (enableLogging) {
+                logger.info(stateMachine.getCurrentAgent().getName() + "'s question: " + currentMessage.getPayload().getAnswer());
+            }
 
             // Check if task is finalized
             if (isTaskComplete(currentMessage)) {
@@ -171,15 +172,6 @@ public class AgentOrchestrator {
 
             if (nextAgent != null) {
                 // decide the next agent to route to after finalization for verification of other agents
-                if (stateMachine.getCurrentAgent().getName().equals(nextAgent) && finalizedAgents.contains(nextAgent)) {
-                    nextAgent = chooseNotFinalizedAgent(stateMachine.getCurrentAgent(), finalizedAgents, stateMachine);
-                    if (nextAgent.equals("NOT_FOUND")) {
-                        if (enableLogging) {
-                            logger.info("No available agents to route to. Task finished.");
-                        }
-                        break;
-                    }
-                }
 
                 if (enableLogging) {
                     logger.info(String.format("Routing to agent: %s", nextAgent));
@@ -205,16 +197,6 @@ public class AgentOrchestrator {
         }
 
         return currentMessage.getPayload();
-    }
-
-    private String chooseNotFinalizedAgent(Agent currentAgent, Set<String> finalizedAgents, AgentStateMachine stateMachine) {
-        for (Agent agent : stateMachine.getAllAgents()) {
-            if (stateMachine.getTransitions(currentAgent.getName()).contains(agent.getName())
-                && !finalizedAgents.contains(agent.getName())) {
-                return agent.getName();
-            }
-        }
-        return "NOT_FOUND";
     }
 
     /**

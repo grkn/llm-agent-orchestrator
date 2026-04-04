@@ -44,7 +44,7 @@ public abstract class AbstractAgent implements Agent {
     }
 
     @Override
-    public String shouldTransition(Message message) {
+    public String shouldTransition(Message message, AgentContext context) {
         return null;
     }
 

@@ -45,9 +45,10 @@ public interface Agent {
      * Determines if this agent should transition based on the message.
      *
      * @param message the message to evaluate
+     * @param context the current execution context
      * @return the name of the next agent to transition to, or null to stay in current state
      */
-    String shouldTransition(Message message);
+    String shouldTransition(Message message, AgentContext context);
 
     String toolDescription();
 

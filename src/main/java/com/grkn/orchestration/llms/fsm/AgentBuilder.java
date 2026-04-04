@@ -10,7 +10,6 @@ import com.grkn.orchestration.llms.strategy.ActionStrategy;
 import com.grkn.orchestration.llms.strategy.ActionStrategyFactory;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -121,29 +120,69 @@ public class AgentBuilder {
 
             @Override
             public Message process(Message message, AgentContext context) throws Exception {
-                boolean actionRetry = true;
+                String mainPrompt = buildPrompt(message, context);
+                ApiResponse apiResponse = executeWithRetry(mainPrompt, context);
+                return executeStrategy(message, apiResponse);
+            }
+
+            @Override
+            public String shouldTransition(Message message, AgentContext context) {
+                if (message.getType() == null
+                    || Action.FINALIZE_TASK.name().equals(message.getPayload().getAction())
+                    || message.getType().equals(context.getStateMachine().getCurrentAgent().getName())) {
+                    // Decision logic for transition if the next agent is not specified or looped back to the same agent
+                    return decideNextAgent(message, context);
+                } else {
+
+                    return message.getType();
+                }
+            }
+
+            private String buildPrompt(Message message, AgentContext context) {
+                String currentTask = message.getPayload() != null ? message.getPayload().getAnswer() : null;
+                return AgentOrchestrator.mainPrompt.formatted(
+                        prompt,
+                        toolDescription(),
+                        currentTask,
+                        availableAgents(context),
+                        findFinalizedAgents(message)
+                );
+            }
+
+            private ApiResponse executeWithRetry(String prompt, AgentContext context) throws Exception {
                 ApiResponse apiResponse = null;
-                Action action = Action.ASK_AGENT;
-                // TO make it robust retrying will handle invalid action
-                String mainPrompt = AgentOrchestrator.mainPrompt.formatted(prompt, toolDescription(),
-                        message.getPayload() != null ? message.getPayload().getAnswer() : null
-                        , availableAgents(context)
-                        , findFinalizedAgents(message));
-                while (actionRetry) {
-                    apiResponse = client.execute(Properties.INSTANCE,
-                            mainPrompt,
-                            message.getPayload() != null ? message.getPayload().getResponseId() : null);
-                    try {
-                        action = Action.valueOf(apiResponse.getAction());
-                        actionRetry = false;
-                    } catch (IllegalArgumentException e) {
-                        logger.info("Invalid action: " + apiResponse.getAction() + " retrying...");
+                String responseIdKey = this.getName() + "-api-response-id";
+                int retryCount = 0;
+                while (retryCount < 5) {
+                    String responseId = (String) context.getState(responseIdKey);
+                    apiResponse = client.execute(Properties.INSTANCE, prompt, responseId);
+                    context.setState(responseIdKey, apiResponse.getResponseId());
+
+                    if (isValidAction(apiResponse.getAction())) {
+                        return apiResponse;
                     }
+
+                    retryCount++;
+                    logger.info("Invalid action: " + apiResponse.getAction() + " - retrying...");
                 }
 
+                throw new IllegalStateException("Failed to get valid action after 3 retries");
+            }
+
+            private boolean isValidAction(String actionString) {
+                try {
+                    Action.valueOf(actionString);
+                    return true;
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
+            }
+
+            private Message executeStrategy(Message message, ApiResponse apiResponse) throws Exception {
+                Action action = Action.valueOf(apiResponse.getAction());
                 ActionStrategy strategy = ActionStrategyFactory.getStrategy(action);
                 message.setPayload(apiResponse);
-                return strategy.execute(message, apiResponse , this);
+                return strategy.execute(message, apiResponse, this);
             }
 
             private String findFinalizedAgents(Message message) {
@@ -164,11 +203,30 @@ public class AgentBuilder {
                 return sb.toString();
             }
 
-            @Override
-            public String shouldTransition(Message message) {
-                // Type: agent name for next transition
-                // if there is noonext transition then it will stay in the same agent to think about the next action
-                return message.getType() == null ? this.getName() : message.getType();
+            private String decideNextAgent(Message message, AgentContext context) {
+                int retryCount = 0;
+                String nextAgent = "NO_AGENT";
+                while (retryCount < 3) {
+                    AgentStateMachine stateMachine = context.getStateMachine();
+                    TransitionValidator.TransitionValidationResult transitionValidationResult = TransitionAgent.builder().build()
+                            .decideTransition(stateMachine.getCurrentAgent(), stateMachine.getAgent(message.getType()),
+                                    message, stateMachine.getContext());
+                    if (transitionValidationResult.isAllowed()) {
+                        // Type: agent name for next transition
+                        nextAgent = transitionValidationResult.getReason();
+                        break;
+                    }
+
+                    retryCount++;
+                }
+                // check weather next agent is valid
+                for (Agent agent : context.getStateMachine().getAllAgents()) {
+                    if(agent.getName().equals(nextAgent)) {
+                        return nextAgent;
+                    }
+                }
+
+                throw new IllegalStateException("Failed to get valid next agent after 3 retries");
             }
         };
     }

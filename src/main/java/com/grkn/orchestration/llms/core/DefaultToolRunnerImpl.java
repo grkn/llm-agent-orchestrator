@@ -17,7 +17,6 @@ import java.util.concurrent.Future;
 public class DefaultToolRunnerImpl implements ToolRunner<List<CallableResponse>> {
 
     public final static ToolRunner<List<CallableResponse>> INSTANCE = new DefaultToolRunnerImpl();
-    private final ExecutorService executorService = Executors.newFixedThreadPool(50);
 
     @Override
     public List<CallableResponse> run(Action action, List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent) throws InterruptedException {
@@ -42,9 +41,11 @@ public class DefaultToolRunnerImpl implements ToolRunner<List<CallableResponse>>
 
     private List<CallableResponse> runParallel(List<String> toolNames, List<Map<String, String>> inputs, AbstractAgent agent)
             throws InterruptedException {
-        Collection<LlmCallable> callables = createCallables(toolNames, inputs, agent);
-        List<Future<CallableResponse>> futures = executorService.invokeAll(callables);
-        return getResponses(toolNames, futures);
+        try (ExecutorService executorService = Executors.newFixedThreadPool(5)){
+            Collection<LlmCallable> callables = createCallables(toolNames, inputs, agent);
+            List<Future<CallableResponse>> futures = executorService.invokeAll(callables);
+            return getResponses(toolNames, futures);
+        }
     }
 
     private static List<CallableResponse> getResponses(List<String> toolNames, List<Future<CallableResponse>> futures) {

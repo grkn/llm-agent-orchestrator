@@ -1,236 +1,424 @@
 # LLM Agent Orchestrator
 
-[![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://www.oracle.com/java/)
-[![Maven](https://img.shields.io/badge/Maven-3.6+-blue.svg)](https://maven.apache.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+A Java 21 framework for building multi-agent LLM workflows with a finite-state-machine (FSM) orchestration model. This framework enables complex AI agent collaboration through structured state transitions, intelligent routing, and tool execution.
 
-> **A sophisticated Java framework for building multi-agent LLM orchestration systems powered by Finite State Machines**
+## Table of Contents
 
-Build intelligent, collaborative AI workflows where multiple specialized agents work together to solve complex tasks through structured communication, intelligent routing, and automated decision-making.
+1. [Overview](#overview)
+2. [Key Features](#key-features)
+3. [Project Status](#project-status)
+4. [Architecture](#architecture)
+5. [Execution Lifecycle](#execution-lifecycle)
+6. [Core Packages and Classes](#core-packages-and-classes)
+7. [Prerequisites](#prerequisites)
+8. [Installation and Build](#installation-and-build)
+9. [Configuration](#configuration)
+10. [Quick Start](#quick-start)
+11. [Action Model](#action-model)
+12. [Tool Integration](#tool-integration)
+13. [Transition Model](#transition-model)
+14. [Advanced Features](#advanced-features)
+15. [Extending the Framework](#extending-the-framework)
+16. [Observability and Logging](#observability-and-logging)
+17. [Error Handling and Retries](#error-handling-and-retries)
+18. [Known Limitations](#known-limitations)
+19. [Troubleshooting](#troubleshooting)
+20. [Roadmap Suggestions](#roadmap-suggestions)
+21. [License](#license)
 
----
+## Overview
 
-## 📋 Table of Contents
+The LLM Agent Orchestrator provides a robust framework for coordinating multiple AI agents in complex workflows. Each agent specializes in specific tasks and communicates through a structured message-passing system. The framework handles:
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Core Concepts](#core-concepts)
-- [Agent Configuration](#agent-configuration)
-- [Intelligent Routing](#intelligent-routing)
-- [Transition Validation](#transition-validation)
-- [Action Strategies](#action-strategies)
-- [Tool System](#tool-system)
-- [Context Management](#context-management)
-- [Advanced Usage](#advanced-usage)
-- [Complete Examples](#complete-examples)
-- [Best Practices](#best-practices)
-- [API Reference](#api-reference)
-- [Troubleshooting](#troubleshooting)
-- [Performance & Optimization](#performance--optimization)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
+- **Agent lifecycle management** - Registration, initialization, and finalization
+- **State machine coordination** - Explicit transitions with validation
+- **LLM integration** - OpenAI-compatible API calls with retry logic
+- **Tool execution** - Sequential and parallel tool invocation
+- **Message routing** - Context-aware agent-to-agent communication
+- **Transition intelligence** - Automatic agent selection when explicit routes aren't defined
 
----
+## Key Features
 
-## 🎯 Overview
+✅ **Fluent Agent Builder** - Create agents without writing separate classes
+✅ **FSM-Based Orchestration** - Explicit state transitions with validation rules
+✅ **Intelligent Routing** - TransitionAgent automatically selects appropriate agents
+✅ **Tool Execution Pipeline** - Annotation-based tool discovery and execution
+✅ **Retry Mechanisms** - Built-in retry logic for LLM calls and action validation
+✅ **Parallel Tool Execution** - Concurrent tool invocation with thread pool management
+✅ **Context Management** - Shared state across agent interactions
+✅ **Finalization Tracking** - Per-agent task completion monitoring
 
-**LLM Agent Orchestrator** is a production-ready Java framework that enables you to create sophisticated multi-agent systems where AI agents collaborate to accomplish complex tasks. Built on finite state machine principles, it provides:
+## Project Status
 
-- **Multi-agent collaboration** with clearly defined roles and responsibilities
-- **Intelligent routing** using AI-powered decision making
-- **Validation rules** to enforce workflow constraints
-- **Tool integration** for real-world actions (file I/O, API calls, builds)
-- **Context sharing** for stateful agent communication
-- **Strategy patterns** for flexible action execution
+This codebase is a **framework-level implementation** intended as a library module (not a standalone runnable application).
 
-### Use Cases
+**Repository characteristics:**
+- ✅ Production-ready agent orchestration framework
+- ✅ Comprehensive agent lifecycle management
+- ✅ Built with Java 21 and Maven
+- ⚠️ No main class (library module)
+- ⚠️ No tests in `src/test` (test coverage needed)
+- ⚠️ Depends on external artifact: `com.grkn:ToolLibrary:1.0-SNAPSHOT`
+- ⚠️ Includes prebuilt jar in `target/` from prior build
 
-- **Software Development Workflows**: Orchestrate product owners, architects, developers, and testers
-- **Content Generation Pipelines**: Coordinate researchers, writers, editors, and reviewers
-- **Data Processing**: Chain analysts, transformers, validators, and publishers
-- **Customer Service**: Route inquiries through support tiers with escalation logic
-- **DevOps Automation**: Coordinate build, test, deploy, and monitoring agents
+## Architecture
 
----
-
-## ✨ Key Features
-
-### 🤖 Multi-Agent Orchestration
-
-- **Specialized Agents**: Create agents with specific roles, capabilities, and tools
-- **FSM-Based State Management**: Agents transition through well-defined states
-- **Agent Communication**: Agents can ask questions and delegate tasks to each other
-- **Lifecycle Hooks**: Execute custom logic on agent entry/exit with `onEnter()` and `onExit()`
-- **Finalization Tracking**: Agents signal completion when their work is done
-
-### 🧠 Intelligent Routing System
-
-- **AI-Powered Decisions**: LLM analyzes tasks and automatically selects the best agent
-- **Context-Aware Routing**: Considers agent capabilities, workflow history, and current state
-- **Confidence Scoring**: Routing decisions include confidence levels and reasoning
-- **Fallback Mechanisms**: Graceful handling when optimal routing is unclear
-
-### 🛡️ Transition Validation
-
-- **Pre-built Rules**: 10+ validation rules for common scenarios (finalization, recursion, limits)
-- **Custom Validators**: Implement complex business logic with custom validation functions
-- **Strict Mode**: Enforce or warn on validation failures
-- **Rule Composition**: Combine validators with AND/OR logic
-
-### 🔄 Flexible Action Strategies
-
-- **Sequential Execution**: Run tools one after another with output chaining
-- **Parallel Execution**: Execute multiple tools concurrently for performance
-- **Agent Delegation**: Route sub-tasks to specialized agents
-- **Task Finalization**: Signal completion with results
-
-### 🛠️ Tool Integration
-
-- **Annotation-Based**: Define tools with `@Tool` and `@ToolParameter` annotations
-- **Built-in Tools**: File operations, Maven builds, and more
-- **Stateful Tools**: Tool instances can maintain state across calls
-- **Type-Safe Parameters**: Automatic parameter extraction and validation
-- **Tool Discovery**: Automatic detection via reflection
-
-### 📊 Context Management
-
-- **Shared State**: Store and retrieve data across agent transitions
-- **Metadata Tracking**: Iteration counts, finalized agents, routing history
-- **State Machine Access**: Agents can query available transitions and agents
-- **Per-Agent State**: Maintain agent-specific state (e.g., LLM conversation IDs)
-
----
-
-## 🏗️ Architecture
-
-### System Overview
+### High-Level Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         AgentOrchestrator                               │
-│  • Manages workflow lifecycle and iteration control                     │
-│  • Tracks finalized agents and completion status                        │
-│  • Enforces maximum iteration limits                                    │
-│  • Coordinates message passing between agents                           │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       AgentStateMachine                                 │
-│  • Current agent state tracking                                         │
-│  • Transition rule enforcement                                          │
-│  • Message routing between agents                                       │
-│  • Integration point for routing and validation                         │
-└────────────┬────────────────────────────────────────────────────────────┘
-             │
-             ├──────────────────────────┬─────────────────────────────────┐
-             ▼                          ▼                                 ▼
-  ┌────────────────────┐    ┌─────────────────────────┐    ┌──────────────────────┐
-  │ TransitionAgent    │    │ IntelligentTransition   │    │  TransitionListener  │
-  │  (Validation)      │    │  Agent (Smart Router)   │    │   (Observability)    │
-  ├────────────────────┤    ├─────────────────────────┤    ├──────────────────────┤
-  │ • Rule validation  │    │ • LLM-powered routing   │    │ • Audit logging      │
-  │ • Custom validators│    │ • Context analysis      │    │ • Metrics collection │
-  │ • Strict/warn mode │    │ • Capability matching   │    │ • Event publishing   │
-  │ • Deny reasons     │    │ • Confidence scoring    │    │ • Notifications      │
-  └────────────────────┘    └─────────────────────────┘    └──────────────────────┘
-             │
-             ▼
-    ┌────────┴────────┬────────────────┬────────────┐
-    ▼                 ▼                ▼            ▼
-┌─────────┐      ┌─────────┐     ┌─────────┐  ┌─────────┐
-│ Agent A │◄────►│ Agent B │◄───►│ Agent C │  │ Agent N │
-│  (PO)   │      │  (Dev)  │     │  (QA)   │  │  (...)  │
-└────┬────┘      └────┬────┘     └────┬────┘  └────┬────┘
-     │                │               │            │
-     │    ┌───────────┴───────────────┴────────────┘
-     │    │
-     ▼    ▼
-┌─────────────────────────────────────────────────────────┐
-│                   AgentContext                          │
-│  • Shared state storage (key-value pairs)               │
-│  • State machine reference for queries                  │
-│  • Metadata (iteration count, finalized agents)         │
-│  • Per-agent state isolation                            │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────────┐
-│                 Message Processing                      │
-│                                                         │
-│  1. Agent.process(message, context)                    │
-│  2. Build LLM prompt with role + tools + context       │
-│  3. Execute LLM with retry on invalid actions          │
-│  4. Parse action (SEQUENTIAL, PARALLEL, ASK, FINALIZE) │
-│  5. Select and execute ActionStrategy                  │
-│  6. Agent.shouldTransition(message, context)           │
-│  7. Validate or route to next agent                    │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────────┐
-│               ActionStrategy (Strategy Pattern)         │
-│                                                         │
-│  ┌─────────────────┐  ┌─────────────────┐             │
-│  │  Sequential     │  │   Parallel      │             │
-│  │  • Run tools    │  │   • Concurrent  │             │
-│  │    one by one   │  │     execution   │             │
-│  │  • Chain output │  │   • Collect all │             │
-│  └─────────────────┘  └─────────────────┘             │
-│                                                         │
-│  ┌─────────────────┐  ┌─────────────────┐             │
-│  │   AskAgent      │  │  FinalizeTask   │             │
-│  │  • Route to     │  │   • Signal      │             │
-│  │    other agent  │  │     completion  │             │
-│  │  • Pass message │  │   • Return      │             │
-│  └─────────────────┘  └─────────────────┘             │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Tool Execution Layer                   │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ File Tools   │  │ Build Tools  │  │ Custom Tools │ │
-│  │ • CREATE     │  │ • Maven      │  │ • HTTP API   │ │
-│  │ • READ       │  │ • Gradle     │  │ • Database   │ │
-│  │ • MODIFY     │  │ • npm        │  │ • Cloud SDK  │ │
-│  │ • DELETE     │  │ • Docker     │  │ • Anything!  │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    AgentOrchestrator                        │
+│  - Manages workflow loop                                    │
+│  - Tracks agent finalization                                │
+│  - Enforces iteration limits                                │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  AgentStateMachine                          │
+│  - Registers agents and transitions                         │
+│  - Manages current state                                    │
+│  - Notifies listeners                                       │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Current Agent                             │
+│  (Built via AgentBuilder extending AbstractAgent)           │
+│  - Builds prompts from templates                            │
+│  - Calls LLM via ChatGptClient                             │
+│  - Validates and executes actions                           │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+┌─────────────┐  ┌──────────────┐  ┌────────────┐
+│ ChatGptClient│  │TransitionAgent│  │ActionStrategy│
+│ - HTTP calls │  │ - Validates   │  │ - RUN_TOOL │
+│ - Retries    │  │   transitions │  │ - ASK_AGENT│
+│ - Backoff    │  │ - Auto-routes │  │ - FINALIZE │
+└─────────────┘  └──────────────┘  └──────┬─────┘
+                                           │
+                         ┌─────────────────┴──────────────┐
+                         ▼                                 ▼
+              ┌─────────────────────┐         ┌──────────────────┐
+              │DefaultToolRunnerImpl│         │  Message Router  │
+              │ - Sequential exec   │         │  - Next agent    │
+              │ - Parallel exec     │         │  - Payload       │
+              └─────────────────────┘         └──────────────────┘
 ```
 
-### Component Responsibilities
+### Workflow Steps
 
-| Component | Purpose | Key Methods |
-|-----------|---------|-------------|
-| **AgentOrchestrator** | Workflow coordinator | `process()`, `builder()` |
-| **AgentStateMachine** | FSM state manager | `transitionTo()`, `processMessage()`, `determineNextAgent()` |
-| **Agent** | Specialized AI worker | `process()`, `shouldTransition()`, `onEnter()`, `onExit()` |
-| **IntelligentTransitionAgent** | AI-powered router | `determineNextAgent()` |
-| **TransitionAgent** | Rule-based validator | `validateTransition()` |
-| **TransitionValidator** | Validation logic | `validate()` |
-| **TransitionRule** | Pre-built rules | Static factory methods |
-| **AgentContext** | Shared state | `setState()`, `getState()`, `getStateMachine()` |
-| **ActionStrategy** | Execution logic | `execute()` |
-| **Message** | Agent communication | `builder()`, `getPayload()`, `getMetadata()` |
+1. **Agent Definition** - Define agents with `AgentBuilder` specifying prompts and tools
+2. **Orchestrator Creation** - Create `AgentOrchestrator` with agents and transition rules
+3. **FSM Initialization** - Start state machine at designated initial agent
+4. **Agent Processing** - Active agent builds prompt and calls LLM via `ChatGptClient`
+5. **Action Execution** - LLM returns `ApiResponse` with action type and parameters
+6. **Strategy Dispatch** - Matching strategy executes (`RUN_TOOL_*`, `ASK_AGENT`, `FINALIZE_TASK`)
+7. **Transition Decision** - FSM determines next agent via explicit rules or `TransitionAgent`
+8. **Loop Continuation** - Process repeats until completion criteria met
 
----
+## Execution Lifecycle
 
-## 📦 Installation
+The `AgentOrchestrator.process()` method orchestrates the entire workflow:
 
-### Prerequisites
+```java
+1. stateMachine.start()
+   → Initializes FSM with initial agent
 
-- **Java 21+** (uses modern Java features like text blocks, records, pattern matching)
-- **Maven 3.6+** for dependency management and building
-- **LLM API Access** (OpenAI GPT-4, Claude, or compatible endpoint)
+2. Create initial Message
+   → iteration = 0
+   → finalizedAgents = {}
+   → type = initialAgent.name
 
-### Maven Dependency
+3. Main loop (while iteration < maxIterations):
+   a. Process message through current agent
+      → Build prompt with template
+      → Execute LLM call with retry
+      → Validate action enum
+      → Execute action strategy
 
-Add to your `pom.xml`:
+   b. Check for finalization
+      → If FINALIZE_TASK: mark agent as finalized
+      → If all agents finalized: exit loop
+
+   c. Determine next agent
+      → From message.type (set by ASK_AGENT)
+      → Or via TransitionAgent decision logic
+
+   d. Validate transition
+      → Check explicit transitions in FSM
+      → Or use TransitionAgent for intelligent routing
+
+   e. Update message for next agent
+      → Rebuild with new type/sender
+      → Carry forward payload
+      → Update metadata (iteration, finalizedAgents)
+
+4. Return final ApiResponse
+```
+
+### Important Behaviors
+
+- **Per-Agent Finalization** - Each agent tracks its own completion state
+- **Re-activation Support** - Finalized agents can be un-finalized if targeted by another agent
+- **Iteration Safety** - Hard limit prevents infinite loops
+- **Context Preservation** - Shared context persists across all agent transitions
+
+## Core Packages and Classes
+
+### `com.grkn.orchestration.llms.orchestrator`
+
+#### **AgentOrchestrator**
+Main coordinator and loop controller providing:
+- Builder API for transitions, recursion, logging, listeners, and iteration limits
+- Workflow execution via `process()` method
+- Agent finalization tracking
+- Iteration limit enforcement
+
+**Key Methods:**
+- `process()` - Executes orchestration workflow
+- `builder(List<Agent>)` - Creates builder instance
+- Builder methods: `maxIterations()`, `enableLogging()`, `initialAgent()`, `addTransition()`, `allowRecursive()`
+
+### `com.grkn.orchestration.llms.fsm`
+
+#### **Agent (Interface)**
+Contract for all agents defining:
+- `process(Message, AgentContext)` - Core processing logic
+- `shouldTransition(Message, AgentContext)` - Transition decision logic
+- `getName()` - Agent identifier
+- `getPrompt()` - Agent's role description
+- Lifecycle hooks: `onEnter()`, `onExit()`
+
+#### **AbstractAgent**
+Base implementation providing:
+- Name, prompt, and tool metadata management
+- Tool method extraction via reflection
+- Tool description generation for prompts
+- Template method pattern for agent behavior
+
+#### **AgentBuilder**
+Fluent builder creating `AbstractAgent` implementations with:
+- Prompt composition using orchestrator template
+- LLM call execution with retry logic
+- Action enum validation
+- Action strategy dispatch
+- Transition decision via `TransitionAgent` fallback
+
+**Core Builder Methods:**
+```java
+AgentBuilder.create("AgentName")
+    .prompt("Agent's role and responsibilities")
+    .toolInstance(toolsObject)
+    .onEnter(context -> { /* setup logic */ })
+    .onExit(context -> { /* cleanup logic */ })
+    .build()
+```
+
+#### **AgentStateMachine**
+FSM manager handling:
+- Agent registration and retrieval
+- Transition registration (explicit and recursive)
+- State transitions with validation
+- Transition listener notifications
+- Shared context management
+
+**Key Methods:**
+- `registerAgent(Agent)` - Add agent to FSM
+- `addTransition(String from, String to)` - Define allowed transition
+- `addRecursiveTransition(String agentName)` - Allow self-loops
+- `transitionTo(String agentName)` - Execute transition
+- `processMessage(Message)` - Route message through current agent
+
+#### **AgentContext**
+Shared state container providing:
+- Key-value state storage (`setState()`, `getState()`)
+- Reference to `AgentStateMachine`
+- Internal message routing helper
+
+#### **Message**
+Agent-to-agent communication envelope containing:
+- `type` - Next agent identifier
+- `payload` - `ApiResponse` object
+- `sender` - Source agent name
+- `metadata` - Map for iteration count, finalized agents, etc.
+
+#### **TransitionAgent**
+Intelligent transition validator that:
+- Evaluates transitions with `TransitionValidator` chain
+- Includes `DefaultTransitionValidator` that queries LLM for best agent
+- Supports strict/non-strict validation modes
+- Logs denied transitions with reasons
+
+**Default Behavior:**
+1. If requested transition exists in FSM → allow
+2. If not allowed → ask LLM to select most responsible agent
+3. Return selected agent or deny with reason
+
+#### **TransitionValidator (Interface)**
+Custom transition rule contract returning:
+- `TransitionValidationResult` with allow/deny status
+- Reason string (agent name if allowed, error if denied)
+
+### `com.grkn.orchestration.llms.core`
+
+#### **ChatGptClient**
+HTTP client wrapper for LLM calls featuring:
+- Singleton pattern (`ChatGptClient.INSTANCE`)
+- Exponential backoff retry (up to 5 attempts)
+- Response ID tracking for conversation continuity
+- HTTP 429 retry handling
+- Error handling for HTTP >= 400
+
+**Retry Conditions:**
+- HTTP 429 (rate limit)
+- IOException
+- InterruptedException
+
+#### **DefaultToolFinder**
+Tool discovery service:
+- Scans methods for `@Tool(name="...")` annotation
+- Returns matching method for tool name
+- Used by `LlmCallable` for invocation
+
+#### **LlmCallable**
+Tool invocation wrapper:
+- Parses tool input JSON to parameter type
+- Invokes method via reflection
+- Wraps result in `CallableResponse`
+- Captures exceptions as errors
+
+#### **DefaultToolRunnerImpl**
+Tool execution engine:
+- **Sequential execution** - Tools run one by one
+- **Parallel execution** - Fixed thread pool (size 50)
+- Returns `List<CallableResponse>` with results/errors
+
+### `com.grkn.orchestration.llms.strategy`
+
+#### **ActionStrategy (Interface)**
+Strategy pattern contract for action execution.
+
+#### **ActionStrategyFactory**
+Maps `Action` enum values to implementations:
+- `RUN_TOOL_SEQUENTIAL` → `RunToolSequentialStrategy`
+- `RUN_TOOL_PARALLEL` → `RunToolParallelStrategy`
+- `ASK_AGENT` → `AskAgentStrategy`
+- `FINALIZE_TASK` → `FinalizeStrategy`
+
+#### **RunToolSequentialStrategy**
+Executes tool list in order:
+- Calls `DefaultToolRunnerImpl.runSequential()`
+- Writes first result/error to `toolOutput`
+- Returns message with updated payload
+
+#### **RunToolParallelStrategy**
+Executes tools concurrently:
+- Calls `DefaultToolRunnerImpl.runParallel()`
+- Writes list of results/errors to `toolOutput`
+- Returns message with updated payload
+
+#### **AskAgentStrategy**
+Routes to another agent:
+- Builds new message with `type = apiResponse.agentName`
+- Preserves payload
+- Updates sender to current agent
+
+#### **FinalizeStrategy**
+Signals task completion:
+- Returns response payload unchanged
+- Triggers finalization in orchestrator loop
+
+### `com.grkn.orchestration.llms.dto`
+
+#### **ApiResponse**
+Structured LLM response containing:
+- `action` - Action type enum value
+- `agentName` - Target agent for `ASK_AGENT`
+- `toolNames` - List of tools to execute
+- `inputs` - List of input objects for tools
+- `answer` - Message content or final answer
+- `toolOutput` - Tool execution results (set by framework)
+- `responseId` - Conversation tracking ID
+
+#### **CallableResponse**
+Tool invocation result:
+- `result` - Successful execution result
+- `error` - Exception message if failed
+- `toolName` - Name of invoked tool
+
+### `com.grkn.orchestration.llms.properties`
+
+#### **Properties**
+Singleton runtime configuration:
+- `openAIKey` - API authentication key
+- `openAIModel` - Model identifier (e.g., "gpt-4")
+- `baseUrl` - API endpoint URL
+- Accessed via `Properties.INSTANCE`
+
+### `com.grkn.orchestration.llms.enums`
+
+#### **Action**
+Available action types:
+- `RUN_TOOL_SEQUENTIAL` - Execute tools one by one
+- `RUN_TOOL_PARALLEL` - Execute tools concurrently
+- `ASK_AGENT` - Delegate to another agent
+- `FINALIZE_TASK` - Mark agent as complete
+
+### `com.grkn.orchestration.llms.interfaces`
+
+#### **Client**
+LLM client contract:
+- `execute(Properties, String prompt, String responseId)` - Make LLM call
+- Implemented by `ChatGptClient`
+
+#### **ToolFinder**
+Tool discovery contract:
+- `findTool(String toolName, List<Method> methods)` - Locate tool method
+- Implemented by `DefaultToolFinder`
+
+#### **ToolRunner**
+Tool execution contract:
+- `runSequential(List<ToolCall>)` - Sequential execution
+- `runParallel(List<ToolCall>)` - Concurrent execution
+- Implemented by `DefaultToolRunnerImpl`
+
+## Prerequisites
+
+- **Java 21+** - Required for language features
+- **Maven 3.9+** - Build and dependency management
+- **OpenAI-compatible endpoint** - LLM API access
+- **ToolLibrary dependency** - `com.grkn:ToolLibrary:1.0-SNAPSHOT` must be available
+
+## Installation and Build
+
+### Clone and Build
+
+```bash
+git clone <repository-url>
+cd llm-agent-orchestrator
+mvn clean package
+```
+
+### Install Dependency
+
+If Maven cannot resolve `com.grkn:ToolLibrary:1.0-SNAPSHOT`:
+
+```bash
+# Install ToolLibrary to local Maven repository first
+cd path/to/ToolLibrary
+mvn clean install
+
+# Then build this project
+cd path/to/llm-agent-orchestrator
+mvn clean package
+```
+
+### Maven Coordinates
+
+To use this framework in your project:
 
 ```xml
 <dependency>
@@ -240,1901 +428,1104 @@ Add to your `pom.xml`:
 </dependency>
 ```
 
-### Required Dependencies
+## Configuration
 
-The framework automatically includes:
-
-```xml
-<dependencies>
-    <!-- Tool management and reflection utilities -->
-    <dependency>
-        <groupId>com.grkn</groupId>
-        <artifactId>ToolLibrary</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </dependency>
-
-    <!-- JSON processing -->
-    <dependency>
-        <groupId>tools.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>3.1.0</version>
-    </dependency>
-</dependencies>
-```
-
-### Configuration
-
-Set up LLM connection (environment variables or Properties):
+Before running orchestration, configure the singleton `Properties.INSTANCE`:
 
 ```java
-// Option 1: Environment variables
-export OPENAI_API_KEY="sk-..."
-export OPENAI_BASE_URL="https://api.openai.com/v1/chat/completions"
-export OPENAI_MODEL="gpt-4"
+import com.grkn.orchestration.llms.properties.Properties;
 
-// Option 2: Programmatic configuration
-Properties.INSTANCE.setOpenAIKey("sk-...");
-Properties.INSTANCE.setBaseUrl("https://api.openai.com/v1/chat/completions");
+Properties.INSTANCE.setOpenAIKey(System.getenv("OPENAI_API_KEY"));
 Properties.INSTANCE.setOpenAIModel("gpt-4");
+Properties.INSTANCE.setBaseUrl("https://api.openai.com/v1/responses");
 ```
 
----
+### Environment Variables
 
-## 🚀 Quick Start
+Recommended approach using environment variables:
 
-### Minimal Example (3 Steps)
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+export OPENAI_MODEL="gpt-4"
+export OPENAI_BASE_URL="https://api.openai.com/v1/responses"
+```
+
+### Notes
+
+- `ChatGptClient` expects an OpenAI Responses-style endpoint
+- Response format: `output[].content[0].text` for extracted text
+- If using a gateway/proxy, ensure it matches this response schema
+
+## Quick Start
+
+Minimal end-to-end example demonstrating agent creation, transition setup, and orchestration:
 
 ```java
-import com.grkn.orchestration.llms.fsm.*;
+import com.grkn.orchestration.llms.dto.ApiResponse;
+import com.grkn.orchestration.llms.fsm.Agent;
+import com.grkn.orchestration.llms.fsm.AgentBuilder;
 import com.grkn.orchestration.llms.orchestrator.AgentOrchestrator;
+import com.grkn.orchestration.llms.properties.Properties;
+
 import java.util.List;
 
-public class QuickStartExample {
+public class QuickStartDemo {
     public static void main(String[] args) throws Exception {
-        // Step 1: Create agents
-        Agent planner = AgentBuilder.create("planner")
-            .prompt("You plan tasks and break them into steps.")
-            .build();
+        // Configure LLM client
+        Properties.INSTANCE.setOpenAIKey(System.getenv("OPENAI_API_KEY"));
+        Properties.INSTANCE.setOpenAIModel("gpt-4");
+        Properties.INSTANCE.setBaseUrl("https://api.openai.com/v1/responses");
 
-        Agent executor = AgentBuilder.create("executor")
-            .prompt("You execute tasks and report results.")
-            .build();
+        // Define agents with prompts (no tools in this example)
+        Agent planner = AgentBuilder.create("Planner")
+                .prompt("You break user requests into actionable tasks and create execution plans.")
+                .toolInstance(null)
+                .build();
 
-        // Step 2: Configure orchestrator
-        AgentOrchestrator orchestrator = AgentOrchestrator.builder(List.of(planner, executor))
-            .initialAgent("planner")
-            .addTransition("planner", "executor")
-            .addTransition("executor", "planner")
-            .maxIterations(50)
-            .build();
+        Agent implementer = AgentBuilder.create("Implementer")
+                .prompt("You implement the planned tasks and verify the changes work correctly.")
+                .toolInstance(null)
+                .build();
 
-        // Step 3: Run workflow
-        var result = orchestrator.process();
-        System.out.println("Result: " + result.getAnswer());
+        Agent reviewer = AgentBuilder.create("Reviewer")
+                .prompt("You review completed work and determine if the original goal is achieved.")
+                .toolInstance(null)
+                .build();
+
+        // Create orchestrator with transition rules
+        AgentOrchestrator orchestrator = AgentOrchestrator.builder(List.of(planner, implementer, reviewer))
+                .initialAgent("Planner")
+                .addTransition("Planner", "Implementer")
+                .addTransition("Implementer", "Reviewer")
+                .addTransition("Reviewer", "Planner")  // Allow iteration
+                .allowRecursive("Implementer")  // Implementer can call itself
+                .maxIterations(50)
+                .enableLogging(true)
+                .build();
+
+        // Run orchestration
+        ApiResponse finalResponse = orchestrator.process();
+
+        System.out.println("=== Final Result ===");
+        System.out.println(finalResponse.getAnswer());
     }
 }
 ```
 
----
+## Action Model
 
-## 💡 Core Concepts
+The LLM must return JSON compatible with `ApiResponse` schema.
 
-### 1. Agents
+### Response Schema
 
-**Agents** are autonomous AI entities with:
-- **Role**: Specialized responsibility (e.g., "developer", "tester")
-- **Prompt**: Instructions defining behavior and capabilities
-- **Tools**: Actions the agent can perform (file I/O, API calls)
-- **Lifecycle**: `onEnter()` and `onExit()` hooks
+```json
+{
+  "action": "<RUN_TOOL_SEQUENTIAL|RUN_TOOL_PARALLEL|ASK_AGENT|FINALIZE_TASK>",
+  "toolNames": ["tool1", "tool2"],
+  "inputs": [{"param1": "value1"}, {"param2": "value2"}],
+  "answer": "<message content or final answer>",
+  "agentName": "<target agent name>",
+  "toolOutput": "<tool execution results>"
+}
+```
+
+### Field Descriptions
+
+| Field | Required | Used By | Description |
+|-------|----------|---------|-------------|
+| `action` | ✅ | All | Action type enum value |
+| `toolNames` | ⚠️ | RUN_TOOL_* | Array of tool names (max 3) |
+| `inputs` | ⚠️ | RUN_TOOL_* | Array of input objects (max 3) |
+| `answer` | ⚠️ | ASK_AGENT, FINALIZE_TASK | Message content or final result |
+| `agentName` | ⚠️ | ASK_AGENT | Target agent identifier |
+| `toolOutput` | ❌ | System | Tool results (framework-managed) |
+
+### Action Semantics
+
+#### **RUN_TOOL_SEQUENTIAL**
+Executes tools one by one in order:
+- **Use When:** Tools don't depend on each other, order matters
+- **Example:** Read file → Process content → Write result
+- **Limit:** Maximum 3 tools per call
+- **Output:** First tool result written to `toolOutput`
+
+#### **RUN_TOOL_PARALLEL**
+Executes tools concurrently via thread pool:
+- **Use When:** Independent operations, speed is critical
+- **Example:** Read multiple files simultaneously
+- **Limit:** Maximum 3 tools per call
+- **Output:** List of all results written to `toolOutput`
+
+#### **ASK_AGENT**
+Delegates to another agent:
+- **Use When:** Task requires specialized agent expertise
+- **Example:** Planner asks Implementer to execute changes
+- **Routing:** Creates message with `type = agentName`
+- **Validation:** TransitionAgent validates/selects appropriate agent
+
+#### **FINALIZE_TASK**
+Marks current agent as finalized:
+- **Use When:** Agent's work is complete
+- **Effect:** Agent marked in `finalizedAgents` set
+- **Completion:** Orchestration ends when all agents finalized
+- **Re-activation:** Finalized agents can be un-finalized if targeted
+
+## Tool Integration
+
+Tool invocation uses reflection-based discovery with annotation scanning from `ToolLibrary`.
+
+### How It Works
+
+```
+1. AbstractAgent scans tool methods from toolClassInstance
+   ↓
+2. DefaultToolFinder locates method by @Tool(name = "...")
+   ↓
+3. LlmCallable reads tool input and maps to parameter type
+   ↓
+4. Method invoked via reflection with parsed parameters
+   ↓
+5. Strategy writes tool result/error to ApiResponse.toolOutput
+```
+
+### Tool Class Example
 
 ```java
-Agent developer = AgentBuilder.create("developer")
-    .prompt("""
-        # Role: Senior Java Developer
+import com.grkn.tool.library.annotation.Tool;
+import com.grkn.tool.library.annotation.ToolParameter;
 
-        # Responsibilities:
-        - Implement features according to requirements
-        - Write clean, maintainable code
-        - Request code reviews from architect
+public class FileTools {
 
-        # Tools Available:
-        You have access to file creation, modification, and Maven builds.
-        """)
-    .toolInstance(new DevelopmentTools())
-    .onEnter(context -> System.out.println("Developer starting work..."))
-    .onExit(context -> System.out.println("Developer finished."))
+    @Tool(name = "read_file")
+    public String readFile(@ToolParameter String path) {
+        // Read and return file contents
+        return Files.readString(Path.of(path));
+    }
+
+    @Tool(name = "write_file")
+    public void writeFile(
+        @ToolParameter String path,
+        @ToolParameter String content
+    ) {
+        // Write content to file
+        Files.writeString(Path.of(path), content);
+    }
+
+    @Tool(name = "list_directory")
+    public List<String> listDirectory(@ToolParameter String path) {
+        // Return list of files in directory
+        return Files.list(Path.of(path))
+            .map(Path::toString)
+            .toList();
+    }
+}
+```
+
+### Attaching Tools to Agent
+
+```java
+FileTools fileTools = new FileTools();
+
+Agent developer = AgentBuilder.create("Developer")
+        .prompt("You implement code changes using file operations.")
+        .toolInstance(fileTools)
+        .build();
+```
+
+### LLM Tool Invocation Example
+
+**Sequential Execution:**
+```json
+{
+  "action": "RUN_TOOL_SEQUENTIAL",
+  "toolNames": ["read_file", "write_file"],
+  "inputs": [
+    {"path": "/src/Main.java"},
+    {"path": "/src/Main.java", "content": "public class Main {}"}
+  ],
+  "answer": "Reading and updating Main.java"
+}
+```
+
+**Parallel Execution:**
+```json
+{
+  "action": "RUN_TOOL_PARALLEL",
+  "toolNames": ["read_file", "read_file", "read_file"],
+  "inputs": [
+    {"path": "/src/A.java"},
+    {"path": "/src/B.java"},
+    {"path": "/src/C.java"}
+  ],
+  "answer": "Reading multiple files simultaneously"
+}
+```
+
+### Tool Requirements
+
+✅ Must have `@Tool(name = "unique_name")` annotation
+✅ Parameters must have `@ToolParameter` annotation
+✅ Tool names must be unique within agent's tool instance
+✅ Input JSON must match parameter types (Jackson deserialization)
+
+## Transition Model
+
+Transitions are **explicit** in `AgentStateMachine` with opt-in features:
+
+### Explicit Transitions
+
+Only configured transitions are allowed:
+
+```java
+orchestrator.addTransition("Planner", "Implementer");  // Planner → Implementer allowed
+orchestrator.addTransition("Implementer", "Reviewer"); // Implementer → Reviewer allowed
+// Planner → Reviewer NOT allowed (not configured)
+```
+
+### Recursive Transitions
+
+Self-loops require explicit opt-in:
+
+```java
+orchestrator.allowRecursive("Implementer");  // Implementer → Implementer allowed
+```
+
+### Agent Transition Decision Path
+
+```
+1. Agent.process(Message, AgentContext) returns Message
+   ↓
+2. Agent.shouldTransition(Message, AgentContext) determines next target
+   ↓
+3. If target ≠ current: FSM executes transitionTo(next)
+   ↓
+4. Transition listeners notified
+   ↓
+5. Next agent's onEnter() called
+```
+
+### TransitionAgent Default Behavior
+
+Intelligent routing when explicit transition doesn't exist:
+
+```
+1. Check if requested transition exists in FSM
+   ├─ YES → Allow transition
+   └─ NO  → Ask LLM to select most responsible agent
+            ↓
+            Analyze agent prompts and decision message
+            ↓
+            Return agent name with highest responsibility match
+```
+
+**LLM Selection Prompt:**
+```
+Rules:
+- Read prompt of current agent and available agents
+- Extract responsibility of available agents
+- Choose agent with highest responsibility ratio
+- Cannot choose current agent
+- Must choose one agent except current agent
+
+Available agents with prompt:
+1-) Planner
+    Prompt: You break requests into actionable tasks
+2-) Implementer
+    Prompt: You implement requested changes
+...
+
+Current agent: Planner
+
+Decision Message: "I need to execute the planned tasks"
+
+Result: {"agentName": "Implementer"}
+```
+
+### Transition Validation
+
+Custom validators can be added:
+
+```java
+TransitionValidator customValidator = (from, to, msg, ctx) -> {
+    if ("RestrictedAgent".equals(to.getName())) {
+        return TransitionValidator.TransitionValidationResult
+            .deny("Access to RestrictedAgent is forbidden");
+    }
+    return TransitionValidator.TransitionValidationResult
+        .allow(to.getName());
+};
+
+// Use in custom agent implementation
+TransitionAgent transitionAgent = TransitionAgent.builder()
+    .addValidator(customValidator)
+    .strictMode(true)
     .build();
 ```
 
-### 2. Finite State Machine
+## Advanced Features
 
-The **AgentStateMachine** manages:
-- **Current State**: Which agent is active
-- **Transitions**: Allowed agent-to-agent routing
-- **Messages**: Communication between agents
-- **Validation**: Rule enforcement
+### Lifecycle Hooks
 
 ```java
-AgentStateMachine stateMachine = new AgentStateMachine();
-stateMachine.registerAgent(agentA);
-stateMachine.registerAgent(agentB);
-stateMachine.addTransition("agentA", "agentB");
-stateMachine.setInitialAgent("agentA");
-```
-
-### 3. Messages
-
-**Messages** carry data between agents:
-
-```java
-Message message = Message.builder("targetAgent")
-    .sender("sourceAgent")
-    .payload(apiResponse)
-    .metadata("iteration", 5)
-    .metadata("priority", "high")
-    .build();
-```
-
-### 4. Actions
-
-Agents respond with **Actions**:
-- `RUN_TOOL_SEQUENTIAL`: Execute tools one by one
-- `RUN_TOOL_PARALLEL`: Execute tools concurrently
-- `ASK_AGENT`: Delegate to another agent
-- `FINALIZE_TASK`: Signal completion
-
-### 5. Context
-
-**AgentContext** provides shared state:
-
-```java
-// Store data
-context.setState("user_requirements", requirements);
-
-// Retrieve data
-String reqs = (String) context.getState("user_requirements");
-
-// Access state machine
-AgentStateMachine sm = context.getStateMachine();
-```
-
----
-
-## 🎨 Agent Configuration
-
-### Basic Agent
-
-```java
-Agent basicAgent = AgentBuilder.create("basic")
-    .prompt("You are a helpful assistant.")
-    .build();
-```
-
-### Agent with Tools
-
-```java
-Agent toolAgent = AgentBuilder.create("worker")
-    .prompt("You perform file operations.")
-    .toolInstance(new FileTools())
-    .build();
-```
-
-### Agent with Lifecycle Hooks
-
-```java
-Agent lifecycleAgent = AgentBuilder.create("lifecycle")
-    .prompt("You coordinate workflows.")
+Agent agent = AgentBuilder.create("DataProcessor")
+    .prompt("Process data with lifecycle management")
+    .toolInstance(tools)
     .onEnter(context -> {
+        // Initialize resources
+        context.setState("startTime", System.currentTimeMillis());
         System.out.println("Agent activated");
-        context.setState("start_time", System.currentTimeMillis());
     })
     .onExit(context -> {
-        long duration = System.currentTimeMillis() -
-            (Long) context.getState("start_time");
-        System.out.println("Agent ran for " + duration + "ms");
+        // Cleanup resources
+        long duration = System.currentTimeMillis()
+                      - (Long) context.getState("startTime");
+        System.out.println("Agent duration: " + duration + "ms");
+    })
+    .build();
+```
+
+### Shared Context Usage
+
+```java
+// In one agent
+context.setState("analysisResults", results);
+
+// In another agent
+Object results = context.getState("analysisResults");
+```
+
+### Transition Listeners
+
+```java
+orchestrator = AgentOrchestrator.builder(agents)
+    .addTransitionListener((from, to) -> {
+        System.out.println(String.format(
+            "Transition: %s → %s",
+            from.getName(),
+            to.getName()
+        ));
+
+        // Log to monitoring system
+        metrics.recordTransition(from.getName(), to.getName());
     })
     .build();
 ```
 
 ### Custom Agent Implementation
 
+For advanced scenarios, extend `AbstractAgent` directly:
+
 ```java
 public class CustomAgent extends AbstractAgent {
     public CustomAgent() {
-        super("custom", toolInstance, "Custom agent prompt");
+        super("CustomAgent", toolsInstance, "Custom prompt");
     }
 
     @Override
     public Message process(Message message, AgentContext context) throws Exception {
         // Custom processing logic
-        ApiResponse response = /* ... */;
-        message.setPayload(response);
-        return message;
+        // Access tool methods via getToolMethods()
+        // Build custom prompts
+        // Implement domain-specific behavior
+        return customMessage;
     }
 
     @Override
     public String shouldTransition(Message message, AgentContext context) {
-        // Custom routing logic
-        if (message.getPayload().getAction().equals("ASK_AGENT")) {
-            return message.getPayload().getAgentName();
-        }
-        return this.getName(); // Stay with current agent
-    }
-}
-```
-
----
-
-## 🧠 Intelligent Routing
-
-### Overview
-
-The **IntelligentTransitionAgent** uses LLM to analyze tasks and automatically route to the best agent based on:
-- Current task requirements
-- Agent capabilities and roles
-- Workflow history and context
-- Finalized agents status
-
-### Basic Usage
-
-```java
-// Create intelligent router
-IntelligentTransitionAgent router = IntelligentTransitionAgent.builder()
-    .enableValidation(true)
-    .build();
-
-// Attach to state machine
-orchestrator.getStateMachine().setIntelligentTransitionAgent(router);
-
-// Now routing happens automatically!
-```
-
-### With Validation Rules
-
-```java
-IntelligentTransitionAgent router = IntelligentTransitionAgent.builder()
-    .addValidator(TransitionRule.maxTransitions(20))  // Prevent loops
-    .addValidator(TransitionRule.noRecursion())       // No self-calls
-    .enableValidation(true)
-    .build();
-```
-
-### Custom LLM Client
-
-```java
-IntelligentTransitionAgent router = IntelligentTransitionAgent.builder()
-    .client(myCustomLLMClient)  // Use custom client
-    .enableValidation(true)
-    .build();
-```
-
-### How It Works
-
-1. **Analyzes** the current message and task
-2. **Reviews** all available agents and their capabilities
-3. **Considers** allowed transitions and context state
-4. **Queries** LLM for intelligent routing decision
-5. **Returns** decision with target agent, reasoning, and confidence
-
-### Routing Decision Format
-
-```java
-TransitionDecision decision = router.determineNextAgent(currentAgent, message, context);
-
-System.out.println("Target: " + decision.getTargetAgent());
-System.out.println("Should transition: " + decision.shouldTransition());
-System.out.println("Reasoning: " + decision.getReasoning());
-System.out.println("Confidence: " + decision.getConfidence());
-```
-
-### Manual Usage
-
-```java
-// Use determineNextAgent in AgentStateMachine
-String nextAgent = stateMachine.determineNextAgent(message);
-
-// Or call directly
-TransitionDecision decision = intelligentRouter.determineNextAgent(
-    currentAgent, message, context
-);
-
-if (decision.shouldTransition()) {
-    stateMachine.transitionTo(decision.getTargetAgent());
-}
-```
-
----
-
-## 🛡️ Transition Validation
-
-### Overview
-
-**TransitionAgent** validates transitions against custom rules before execution, ensuring workflow integrity and preventing invalid state changes.
-
-### Basic Validation
-
-```java
-TransitionAgent validator = TransitionAgent.builder()
-    .addValidator(TransitionRule.requireFinalization())
-    .strictMode(true)
-    .build();
-
-stateMachine.setTransitionAgent(validator);
-```
-
-### Pre-built Rules
-
-#### 1. Require Finalization
-
-Agent must finalize task before transitioning:
-
-```java
-.addValidator(TransitionRule.requireFinalization())
-```
-
-#### 2. Max Transitions
-
-Limit number of transitions per agent:
-
-```java
-.addValidator(TransitionRule.maxTransitions(10))
-```
-
-#### 3. No Recursion
-
-Prevent agents from calling themselves:
-
-```java
-.addValidator(TransitionRule.noRecursion())
-```
-
-#### 4. Allow Only To
-
-Whitelist allowed target agents:
-
-```java
-.addValidator(TransitionRule.allowOnlyTo(Set.of("dev", "test", "qa")))
-```
-
-#### 5. Block From
-
-Blacklist source agents:
-
-```java
-.addValidator(TransitionRule.blockFrom(Set.of("deprecated_agent")))
-```
-
-#### 6. Require Action
-
-Require specific action before transition:
-
-```java
-.addValidator(TransitionRule.requireAction(Action.FINALIZE_TASK))
-```
-
-#### 7. Require Context State
-
-Validate context conditions:
-
-```java
-.addValidator(TransitionRule.requireContextState("approved", true))
-```
-
-#### 8. Require Sender
-
-Validate message sender:
-
-```java
-.addValidator(TransitionRule.requireSender("supervisor"))
-```
-
-### Combining Rules
-
-#### AND Logic
-
-All validators must pass:
-
-```java
-.addValidator(TransitionRule.and(
-    TransitionRule.requireFinalization(),
-    TransitionRule.maxTransitions(5),
-    TransitionRule.requireAction(Action.FINALIZE_TASK)
-))
-```
-
-#### OR Logic
-
-At least one validator must pass:
-
-```java
-.addValidator(TransitionRule.or(
-    TransitionRule.requireSender("admin"),
-    TransitionRule.requireContextState("emergency", true)
-))
-```
-
-### Custom Validators
-
-Implement custom validation logic:
-
-```java
-TransitionValidator customValidator = (fromAgent, toAgent, message, context) -> {
-    // Custom business logic
-    if (fromAgent.getName().equals("junior") && toAgent.getName().equals("production")) {
-        return TransitionValidator.TransitionValidationResult.deny(
-            "Junior agents cannot deploy to production"
-        );
-    }
-
-    // Check context conditions
-    Integer errorCount = (Integer) context.getState("error_count");
-    if (errorCount != null && errorCount > 3) {
-        return TransitionValidator.TransitionValidationResult.deny(
-            "Too many errors - cannot proceed"
-        );
-    }
-
-    return TransitionValidator.TransitionValidationResult.allow();
-};
-
-TransitionAgent validator = TransitionAgent.builder()
-    .addValidator(customValidator)
-    .strictMode(true)
-    .build();
-```
-
-### Strict vs. Warn Mode
-
-```java
-// Strict mode: Block invalid transitions
-TransitionAgent strictValidator = TransitionAgent.builder()
-    .addValidator(rules)
-    .strictMode(true)  // Throws exception on failure
-    .build();
-
-// Warn mode: Log warnings but allow transitions
-TransitionAgent warnValidator = TransitionAgent.builder()
-    .addValidator(rules)
-    .strictMode(false)  // Logs warning, allows transition
-    .build();
-```
-
----
-
-## 🔄 Action Strategies
-
-### Sequential Execution
-
-Execute tools one after another, chaining outputs:
-
-```json
-{
-  "action": "RUN_TOOL_SEQUENTIAL",
-  "toolNames": ["READ_FILE", "MODIFY_FILE", "WRITE_FILE"],
-  "inputs": [
-    {"path": "/data/input.txt"},
-    {"operation": "transform"},
-    {"path": "/data/output.txt", "content": "..."}
-  ]
-}
-```
-
-**Use When:**
-- Tools depend on previous outputs
-- Order matters
-- Sequential processing is required
-
-### Parallel Execution
-
-Execute multiple tools concurrently:
-
-```json
-{
-  "action": "RUN_TOOL_PARALLEL",
-  "toolNames": ["READ_FILE", "READ_FILE", "READ_FILE"],
-  "inputs": [
-    {"path": "/data/file1.txt"},
-    {"path": "/data/file2.txt"},
-    {"path": "/data/file3.txt"}
-  ]
-}
-```
-
-**Use When:**
-- Tools are independent
-- No dependencies between operations
-- Performance is critical
-
-### Agent Delegation
-
-Route task to another agent:
-
-```json
-{
-  "action": "ASK_AGENT",
-  "agentName": "architect",
-  "answer": "Please review this code for architectural issues"
-}
-```
-
-**Use When:**
-- Task requires specialized expertise
-- Another agent has required capabilities
-- Coordination is needed
-
-### Task Finalization
-
-Signal completion and provide results:
-
-```json
-{
-  "action": "FINALIZE_TASK",
-  "answer": "Implementation completed successfully. All tests passing."
-}
-```
-
-**Use When:**
-- Agent's work is complete
-- Ready to move to next agent or finish
-- Final results are available
-
----
-
-## 🛠️ Tool System
-
-### Built-in File Tools
-
-```java
-public class FileTools {
-    @Tool(name = "CREATE_FILE", description = "Create a new file")
-    public String createFile(
-        @ToolParameter(description = "Absolute file path") String absolutePath,
-        @ToolParameter(description = "File content") String content
-    ) {
-        // Implementation
-        return "File created: " + absolutePath;
-    }
-
-    @Tool(name = "READ_FILE", description = "Read file contents")
-    public String readFile(
-        @ToolParameter(description = "Absolute file path") String absolutePath
-    ) {
-        // Implementation
-        return Files.readString(Path.of(absolutePath));
-    }
-
-    @Tool(name = "MODIFY_FILE", description = "Modify existing file")
-    public String modifyFile(
-        @ToolParameter(description = "Absolute file path") String absolutePath,
-        @ToolParameter(description = "New content") String content
-    ) {
-        // Implementation
-        return "File modified: " + absolutePath;
-    }
-
-    @Tool(name = "DELETE_FILE", description = "Delete a file")
-    public String deleteFile(
-        @ToolParameter(description = "Absolute file path") String absolutePath
-    ) {
-        // Implementation
-        Files.delete(Path.of(absolutePath));
-        return "File deleted: " + absolutePath;
-    }
-}
-```
-
-### Built-in Build Tools
-
-```java
-public class BuildTools {
-    @Tool(name = "MVN_CLEAN_INSTALL", description = "Run Maven clean install")
-    public String mavenBuild(
-        @ToolParameter(description = "Project directory") String path
-    ) {
-        // Execute Maven
-        ProcessBuilder pb = new ProcessBuilder("mvn", "clean", "install");
-        pb.directory(new File(path));
-        // ... execute and return output
-    }
-}
-```
-
-### Custom Tools
-
-```java
-@Tool
-public class CustomTools {
-
-    @Tool(name = "SEND_EMAIL", description = "Send email notification")
-    public String sendEmail(
-        @ToolParameter(description = "Recipient email") String to,
-        @ToolParameter(description = "Email subject") String subject,
-        @ToolParameter(description = "Email body") String body
-    ) {
-        // Email implementation
-        return "Email sent to " + to;
-    }
-
-    @Tool(name = "CALL_API", description = "Make HTTP API call")
-    public String callApi(
-        @ToolParameter(description = "API endpoint URL") String url,
-        @ToolParameter(description = "HTTP method") String method,
-        @ToolParameter(description = "Request body") String requestBody
-    ) {
-        // HTTP client implementation
-        return "API response: " + response;
-    }
-
-    @Tool(name = "QUERY_DATABASE", description = "Execute SQL query")
-    public String queryDatabase(
-        @ToolParameter(description = "SQL query") String sql
-    ) {
-        // Database connection and query
-        return "Query results: " + resultSet;
-    }
-}
-```
-
-### Stateful Tools
-
-Tools can maintain state across calls:
-
-```java
-@Tool
-public class StatefulDatabaseTools {
-    private Connection connection;
-
-    public StatefulDatabaseTools(String connectionString) {
-        this.connection = DriverManager.getConnection(connectionString);
-    }
-
-    @Tool(name = "BEGIN_TRANSACTION", description = "Start database transaction")
-    public String beginTransaction() {
-        connection.setAutoCommit(false);
-        return "Transaction started";
-    }
-
-    @Tool(name = "COMMIT", description = "Commit transaction")
-    public String commit() {
-        connection.commit();
-        return "Transaction committed";
-    }
-
-    @Tool(name = "ROLLBACK", description = "Rollback transaction")
-    public String rollback() {
-        connection.rollback();
-        return "Transaction rolled back";
-    }
-}
-```
-
-### Using Tools in Agents
-
-```java
-Agent developer = AgentBuilder.create("developer")
-    .toolInstance(new FileTools())       // Single tool set
-    .prompt("You are a developer...")
-    .build();
-
-Agent fullStack = AgentBuilder.create("fullstack")
-    .toolInstance(new FileTools())        // Multiple tool sets
-    .toolInstance(new BuildTools())       // via multiple instances
-    .toolInstance(new DatabaseTools())
-    .prompt("You are a full-stack developer...")
-    .build();
-```
-
----
-
-## 📊 Context Management
-
-### Basic State Operations
-
-```java
-// Store primitive values
-context.setState("iteration_count", 5);
-context.setState("user_name", "Alice");
-context.setState("is_approved", true);
-
-// Retrieve values
-int count = (int) context.getState("iteration_count");
-String name = (String) context.getState("user_name");
-boolean approved = (boolean) context.getState("is_approved");
-
-// Clear all state
-context.clearState();
-```
-
-### Complex State Objects
-
-```java
-// Store collections
-List<String> requirements = List.of("req1", "req2", "req3");
-context.setState("requirements", requirements);
-
-Map<String, Object> config = Map.of(
-    "environment", "production",
-    "timeout", 30000,
-    "retries", 3
-);
-context.setState("config", config);
-
-// Store custom objects
-class UserProfile {
-    String name;
-    List<String> roles;
-    Map<String, String> preferences;
-}
-UserProfile profile = new UserProfile();
-context.setState("user_profile", profile);
-
-// Retrieve
-List<String> reqs = (List<String>) context.getState("requirements");
-UserProfile user = (UserProfile) context.getState("user_profile");
-```
-
-### Per-Agent State
-
-Agents can maintain their own isolated state:
-
-```java
-Agent agent = AgentBuilder.create("worker")
-    .onEnter(context -> {
-        // Agent-specific state with namespaced key
-        String key = "worker-conversation-id";
-        String conversationId = (String) context.getState(key);
-        if (conversationId == null) {
-            conversationId = UUID.randomUUID().toString();
-            context.setState(key, conversationId);
-        }
-    })
-    .build();
-```
-
-### Metadata in Messages
-
-```java
-// Create message with metadata
-Message message = Message.builder("targetAgent")
-    .payload(response)
-    .metadata("iteration", iterationCount)
-    .metadata("finalizedAgents", finalizedSet)
-    .metadata("priority", "high")
-    .metadata("deadline", Instant.now().plusHours(2))
-    .build();
-
-// Retrieve metadata
-int iteration = (int) message.getMetadata().get("iteration");
-Set<String> finalized = (Set<String>) message.getMetadata().get("finalizedAgents");
-```
-
-### State Machine Queries
-
-```java
-// Access state machine from context
-AgentStateMachine sm = context.getStateMachine();
-
-// Query available agents
-Collection<Agent> allAgents = sm.getAllAgents();
-Agent specific = sm.getAgent("developer");
-
-// Query transitions
-Set<String> allowedTransitions = sm.getTransitions("currentAgent");
-
-// Get current state
-Agent currentAgent = sm.getCurrentAgent();
-Agent initialAgent = sm.getInitialAgent();
-```
-
----
-
-## 🚀 Advanced Usage
-
-### Complete Workflow Example
-
-```java
-public class SoftwareDevelopmentWorkflow {
-    public static void main(String[] args) throws Exception {
-        // 1. Define agents with roles
-        Agent productOwner = AgentBuilder.create("product_owner")
-            .prompt("""
-                # Role: Senior Product Owner
-                # Responsibilities:
-                - Gather and analyze requirements
-                - Create user stories and acceptance criteria
-                - Coordinate with architect and developer
-                - Ensure business value is delivered
-                """)
-            .build();
-
-        Agent architect = AgentBuilder.create("architect")
-            .prompt("""
-                # Role: Software Architect
-                # Responsibilities:
-                - Design system architecture
-                - Define technical standards
-                - Review code for architectural compliance
-                - Guide implementation decisions
-                """)
-            .build();
-
-        Agent developer = AgentBuilder.create("developer")
-            .toolInstance(new FileTools())
-            .toolInstance(new BuildTools())
-            .prompt("""
-                # Role: Senior Java Developer
-
-                # CRITICAL RULES:
-                - YOU MUST write actual code using CREATE_FILE tool
-                - NO pseudo-code or placeholders allowed
-                - Implement complete, working solutions
-
-                # Responsibilities:
-                - Implement features based on requirements
-                - Write clean, tested code
-                - Request code reviews from architect
-                - Fix bugs and issues
-                """)
-            .build();
-
-        Agent tester = AgentBuilder.create("tester")
-            .toolInstance(new FileTools())
-            .toolInstance(new BuildTools())
-            .prompt("""
-                # Role: Senior QA Engineer
-
-                # CRITICAL RULES:
-                - YOU MUST write actual test code
-                - Create comprehensive test suites
-                - No skipping test implementation
-
-                # Responsibilities:
-                - Write and execute tests
-                - Report bugs to developer
-                - Validate fixes
-                - Ensure quality standards
-                """)
-            .build();
-
-        // 2. Configure intelligent routing
-        IntelligentTransitionAgent router = IntelligentTransitionAgent.builder()
-            .addValidator(TransitionRule.maxTransitions(30))
-            .enableValidation(true)
-            .build();
-
-        // 3. Configure validation rules
-        TransitionAgent validator = TransitionAgent.builder()
-            .addValidator(TransitionRule.and(
-                TransitionRule.maxTransitions(50),
-                TransitionRule.noRecursion()
-            ))
-            .strictMode(true)
-            .build();
-
-        // 4. Build orchestrator with transitions
-        AgentOrchestrator orchestrator = AgentOrchestrator.builder(
-            List.of(productOwner, architect, developer, tester)
-        )
-            .initialAgent("product_owner")
-            // Define workflow transitions
-            .addTransition("product_owner", "architect")
-            .addTransition("product_owner", "developer")
-            .addTransition("architect", "developer")
-            .addTransition("architect", "product_owner")
-            .addTransition("developer", "architect")
-            .addTransition("developer", "tester")
-            .addTransition("tester", "developer")
-            .addTransition("tester", "product_owner")
-            .allowRecursive("developer")  // Developer can iterate
-            // Add monitoring
-            .addTransitionListener((from, to) -> {
-                System.out.printf("[TRANSITION] %s -> %s%n",
-                    from.getName(), to.getName());
-            })
-            .maxIterations(100)
-            .enableLogging(true)
-            .build();
-
-        // 5. Attach routing and validation
-        AgentStateMachine sm = orchestrator.getStateMachine();
-        sm.setIntelligentTransitionAgent(router);
-        sm.setTransitionAgent(validator);
-
-        // 6. Execute workflow
-        System.out.println("Starting software development workflow...\n");
-
-        var result = orchestrator.process();
-
-        System.out.println("\n=== WORKFLOW COMPLETE ===");
-        System.out.println("Final Result: " + result.getAnswer());
-    }
-}
-```
-
-### Dynamic Agent Registration
-
-```java
-AgentStateMachine sm = new AgentStateMachine();
-
-// Register agents dynamically
-List<String> roles = List.of("analyst", "designer", "implementer");
-for (String role : roles) {
-    Agent agent = AgentBuilder.create(role)
-        .prompt("You are a " + role)
-        .build();
-    sm.registerAgent(agent);
-}
-
-// Configure transitions dynamically
-for (int i = 0; i < roles.size() - 1; i++) {
-    sm.addTransition(roles.get(i), roles.get(i + 1));
-}
-```
-
-### Conditional Transitions
-
-```java
-Agent router = new AbstractAgent("router", null, "Routing agent") {
-    @Override
-    public String shouldTransition(Message message, AgentContext context) {
-        ApiResponse response = message.getPayload();
-
-        // Route based on message content
-        if (response.getAnswer().contains("error")) {
-            return "error_handler";
-        } else if (response.getAnswer().contains("review")) {
-            return "reviewer";
-        } else {
-            return "processor";
-        }
+        // Custom transition logic
+        return nextAgentName;
     }
 
     @Override
-    public Message process(Message message, AgentContext context) throws Exception {
-        // Routing logic
-        return message;
+    public void onEnter(AgentContext context) {
+        // Custom initialization
     }
-};
-```
 
-### Error Recovery
-
-```java
-Agent resilientAgent = AgentBuilder.create("resilient")
-    .prompt("You handle errors gracefully...")
-    .onEnter(context -> {
-        context.setState("error_count", 0);
-    })
-    .build();
-
-// In custom agent process method:
-@Override
-public Message process(Message message, AgentContext context) throws Exception {
-    try {
-        // Normal processing
-        return processNormally(message, context);
-    } catch (Exception e) {
-        // Track errors
-        int errorCount = (int) context.getState("error_count");
-        context.setState("error_count", errorCount + 1);
-
-        if (errorCount >= 3) {
-            // Escalate after 3 errors
-            message.setType("supervisor");
-            message.getPayload().setAnswer("Need help: " + e.getMessage());
-        } else {
-            // Retry
-            message.setType(this.getName());
-        }
-        return message;
+    @Override
+    public void onExit(AgentContext context) {
+        // Custom cleanup
     }
 }
 ```
 
-### Async Processing (Custom Implementation)
+## Extending the Framework
+
+### 1. Custom Transition Validation
+
+Implement `TransitionValidator` for complex routing rules:
 
 ```java
-public class AsyncOrchestrator {
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
-
-    public CompletableFuture<ApiResponse> processAsync(AgentOrchestrator orchestrator) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return orchestrator.process();
-            } catch (Exception e) {
-                throw new CompletionException(e);
-            }
-        }, executor);
-    }
-
-    public void shutdown() {
-        executor.shutdown();
-    }
-}
-
-// Usage
-AsyncOrchestrator async = new AsyncOrchestrator();
-CompletableFuture<ApiResponse> future = async.processAsync(orchestrator);
-
-future.thenAccept(result -> {
-    System.out.println("Async result: " + result.getAnswer());
-}).exceptionally(ex -> {
-    System.err.println("Error: " + ex.getMessage());
-    return null;
-});
-```
-
----
-
-## 📚 Complete Examples
-
-### Example 1: Content Generation Pipeline
-
-```java
-public class ContentPipeline {
-    public static void main(String[] args) throws Exception {
-        Agent researcher = AgentBuilder.create("researcher")
-            .toolInstance(new WebTools())
-            .prompt("Research topics and gather information")
-            .build();
-
-        Agent writer = AgentBuilder.create("writer")
-            .toolInstance(new FileTools())
-            .prompt("Write engaging content based on research")
-            .build();
-
-        Agent editor = AgentBuilder.create("editor")
-            .prompt("Review and improve content quality")
-            .build();
-
-        Agent publisher = AgentBuilder.create("publisher")
-            .toolInstance(new PublishingTools())
-            .prompt("Format and publish finalized content")
-            .build();
-
-        AgentOrchestrator pipeline = AgentOrchestrator.builder(
-            List.of(researcher, writer, editor, publisher)
-        )
-            .initialAgent("researcher")
-            .addTransition("researcher", "writer")
-            .addTransition("writer", "editor")
-            .addTransition("editor", "writer")     // Edits may require rewrites
-            .addTransition("editor", "publisher")
-            .maxIterations(30)
-            .build();
-
-        var result = pipeline.process();
-        System.out.println("Published: " + result.getAnswer());
-    }
-}
-```
-
-### Example 2: Data Processing Workflow
-
-```java
-public class DataProcessing {
-    public static void main(String[] args) throws Exception {
-        Agent extractor = AgentBuilder.create("extractor")
-            .toolInstance(new DataTools())
-            .prompt("Extract data from various sources")
-            .build();
-
-        Agent transformer = AgentBuilder.create("transformer")
-            .toolInstance(new DataTools())
-            .prompt("Clean and transform data")
-            .build();
-
-        Agent validator = AgentBuilder.create("validator")
-            .prompt("Validate data quality and completeness")
-            .build();
-
-        Agent loader = AgentBuilder.create("loader")
-            .toolInstance(new DatabaseTools())
-            .prompt("Load data into target systems")
-            .build();
-
-        // ETL pipeline
-        AgentOrchestrator etl = AgentOrchestrator.builder(
-            List.of(extractor, transformer, validator, loader)
-        )
-            .initialAgent("extractor")
-            .addTransition("extractor", "transformer")
-            .addTransition("transformer", "validator")
-            .addTransition("validator", "loader")
-            .addTransition("validator", "transformer")  // Back for fixes
-            .maxIterations(20)
-            .build();
-
-        var result = etl.process();
-    }
-}
-```
-
-### Example 3: Customer Support Routing
-
-```java
-public class CustomerSupport {
-    public static void main(String[] args) throws Exception {
-        Agent tier1 = AgentBuilder.create("tier1_support")
-            .toolInstance(new TicketingTools())
-            .prompt("Handle basic customer inquiries")
-            .build();
-
-        Agent tier2 = AgentBuilder.create("tier2_support")
-            .toolInstance(new TicketingTools())
-            .prompt("Handle complex technical issues")
-            .build();
-
-        Agent specialist = AgentBuilder.create("specialist")
-            .toolInstance(new TicketingTools())
-            .prompt("Handle escalated and critical issues")
-            .build();
-
-        // Intelligent routing for support tiers
-        IntelligentTransitionAgent router = IntelligentTransitionAgent.builder()
-            .addValidator(TransitionRule.maxTransitions(10))
-            .build();
-
-        AgentOrchestrator support = AgentOrchestrator.builder(
-            List.of(tier1, tier2, specialist)
-        )
-            .initialAgent("tier1_support")
-            .addTransition("tier1_support", "tier2_support")
-            .addTransition("tier2_support", "specialist")
-            .addTransition("tier2_support", "tier1_support")  // Resolution
-            .allowRecursive("tier1_support")
-            .maxIterations(15)
-            .build();
-
-        support.getStateMachine().setIntelligentTransitionAgent(router);
-
-        var result = support.process();
-    }
-}
-```
-
----
-
-## ✅ Best Practices
-
-### 1. Agent Design
-
-**✅ DO:**
-- Give agents clear, focused responsibilities
-- Use structured prompts with sections (Role, Responsibilities, Tools)
-- Include CRITICAL rules to prevent unwanted behavior
-- Specify exact tool names agents should use
-
-**❌ DON'T:**
-- Create "do everything" agents with vague prompts
-- Assume agents will infer tool availability
-- Skip enforcement rules in prompts
-
-```java
-// ✅ Good
-Agent developer = AgentBuilder.create("developer")
-    .prompt("""
-        # Role: Java Developer
-
-        # CRITICAL:
-        - YOU MUST use CREATE_FILE to write actual code
-        - NO pseudo-code or placeholders
-
-        # Tools: CREATE_FILE, MODIFY_FILE, MVN_CLEAN_INSTALL
-        """)
-    .toolInstance(new DevTools())
-    .build();
-
-// ❌ Bad
-Agent developer = AgentBuilder.create("developer")
-    .prompt("Do development stuff")
-    .build();
-```
-
-### 2. Transition Design
-
-**✅ DO:**
-- Define explicit transition rules
-- Allow bidirectional communication where needed
-- Use recursive transitions for iterative tasks
-- Document why each transition exists
-
-**❌ DON'T:**
-- Allow unrestricted transitions
-- Create circular dependencies without termination
-- Forget to define transitions back for questions
-
-```java
-// ✅ Good
-.addTransition("developer", "architect")  // For design questions
-.addTransition("architect", "developer")  // For implementation
-.addTransition("developer", "tester")     // For testing
-.addTransition("tester", "developer")     // For bug fixes
-.allowRecursive("developer")              // For multi-step work
-
-// ❌ Bad
-.addTransition("agent1", "agent2")
-.addTransition("agent2", "agent3")
-.addTransition("agent3", "agent1")  // Circular with no exit
-```
-
-### 3. Context Usage
-
-**✅ DO:**
-- Use namespaced keys for agent-specific state
-- Clear state when no longer needed
-- Document what state keys mean
-- Use type-safe wrappers for complex state
-
-**❌ DON'T:**
-- Use generic key names that might conflict
-- Store sensitive data without encryption
-- Forget to clean up state between runs
-
-```java
-// ✅ Good
-String key = agentName + "-conversation-id";
-context.setState(key, conversationId);
-
-// ❌ Bad
-context.setState("id", someId);  // Too generic
-```
-
-### 4. Error Handling
-
-**✅ DO:**
-- Validate agent responses before processing
-- Track error counts and implement retry logic
-- Provide fallback mechanisms
-- Log errors with context
-
-**❌ DON'T:**
-- Ignore validation failures
-- Allow infinite retry loops
-- Swallow exceptions without logging
-
-### 5. Performance
-
-**✅ DO:**
-- Use parallel execution for independent tools
-- Set reasonable iteration limits
-- Cache expensive operations
-- Monitor execution time
-
-**❌ DON'T:**
-- Use sequential execution when parallel would work
-- Set iteration limits too high
-- Perform redundant LLM calls
-
-### 6. Testing
-
-**✅ DO:**
-- Test individual agents in isolation
-- Test transition validation rules
-- Test with mock LLM responses
-- Test error scenarios
-
-**❌ DON'T:**
-- Only test happy paths
-- Skip validation rule testing
-- Test only with real LLM calls (expensive + flaky)
-
----
-
-## 📖 API Reference
-
-### AgentOrchestrator
-
-```java
-public class AgentOrchestrator {
-    // Main execution
-    public ApiResponse process() throws Exception
-
-    // Access state machine
-    public AgentStateMachine getStateMachine()
-
-    // Builder
-    public static Builder builder(List<Agent> agents)
-
-    public static class Builder {
-        public Builder initialAgent(String agentName)
-        public Builder addTransition(String from, String to)
-        public Builder allowRecursive(String agentName)
-        public Builder addTransitionListener(TransitionListener listener)
-        public Builder maxIterations(int max)
-        public Builder enableLogging(boolean enable)
-        public AgentOrchestrator build()
-    }
-}
-```
-
-### AgentStateMachine
-
-```java
-public class AgentStateMachine {
-    // Agent management
-    public AgentStateMachine registerAgent(Agent agent)
-    public Agent getAgent(String name)
-    public Collection<Agent> getAllAgents()
-    public Agent getCurrentAgent()
-    public Agent getInitialAgent()
-
-    // Transitions
-    public AgentStateMachine addTransition(String from, String to)
-    public AgentStateMachine addRecursiveTransition(String agent)
-    public Set<String> getTransitions(String agentName)
-    public void transitionTo(String agentName)
-
-    // Lifecycle
-    public void start()
-    public void reset()
-    public Message processMessage(Message message)
-
-    // Routing
-    public String determineNextAgent(Message message)
-    public void setIntelligentTransitionAgent(IntelligentTransitionAgent agent)
-    public void setTransitionAgent(TransitionAgent agent)
-
-    // Listeners
-    public void addTransitionListener(TransitionListener listener)
-    public void removeTransitionListener(TransitionListener listener)
-
-    // Context
-    public AgentContext getContext()
-}
-```
-
-### Agent / AbstractAgent
-
-```java
-public interface Agent {
-    String getName()
-    String getPrompt()
-    String toolDescription()
-
-    void onEnter(AgentContext context)
-    void onExit(AgentContext context)
-
-    Message process(Message message, AgentContext context) throws Exception
-    String shouldTransition(Message message, AgentContext context)
-}
-```
-
-### AgentBuilder
-
-```java
-public class AgentBuilder {
-    public static AgentBuilder create(String name)
-
-    public AgentBuilder name(String name)
-    public AgentBuilder prompt(String prompt)
-    public AgentBuilder toolInstance(Object toolInstance)
-    public AgentBuilder onEnter(Consumer<AgentContext> handler)
-    public AgentBuilder onExit(Consumer<AgentContext> handler)
-
-    public Agent build()
-}
-```
-
-### IntelligentTransitionAgent
-
-```java
-public class IntelligentTransitionAgent {
-    public TransitionDecision determineNextAgent(
-        Agent currentAgent,
-        Message message,
-        AgentContext context
-    )
-
-    public static Builder builder()
-
-    public static class Builder {
-        public Builder client(Client client)
-        public Builder addValidator(TransitionValidator validator)
-        public Builder enableValidation(boolean enable)
-        public IntelligentTransitionAgent build()
-    }
-}
-```
-
-### TransitionAgent
-
-```java
-public class TransitionAgent {
-    public TransitionValidationResult validateTransition(
+public class TimeBasedValidator implements TransitionValidator {
+    @Override
+    public TransitionValidationResult validate(
         Agent fromAgent,
         Agent toAgent,
         Message message,
         AgentContext context
-    )
+    ) {
+        int iteration = (int) message.getMetadata().get("iteration");
 
-    public static Builder builder()
+        // Prevent certain transitions after iteration threshold
+        if (iteration > 10 && "ExpensiveAgent".equals(toAgent.getName())) {
+            return TransitionValidationResult.deny(
+                "ExpensiveAgent disabled after iteration 10"
+            );
+        }
 
-    public static class Builder {
-        public Builder addValidator(TransitionValidator validator)
-        public Builder strictMode(boolean strict)
-        public TransitionAgent build()
+        return TransitionValidationResult.allow(toAgent.getName());
     }
 }
 ```
 
-### TransitionRule
+### 2. Custom LLM Client
+
+Implement `Client` interface for different LLM providers:
 
 ```java
-public class TransitionRule {
-    // Pre-built rules (static factory methods)
-    public static TransitionValidator requireFinalization()
-    public static TransitionValidator allowOnlyTo(Set<String> agents)
-    public static TransitionValidator blockFrom(Set<String> agents)
-    public static TransitionValidator maxTransitions(int max)
-    public static TransitionValidator noRecursion()
-    public static TransitionValidator requireAction(Action action)
-    public static TransitionValidator requireContextState(String key, Object value)
-    public static TransitionValidator requireSender(String sender)
-
-    // Composition
-    public static TransitionValidator and(TransitionValidator... validators)
-    public static TransitionValidator or(TransitionValidator... validators)
-}
-```
-
-### AgentContext
-
-```java
-public class AgentContext {
-    public void setState(String key, Object value)
-    public Object getState(String key)
-    public void clearState()
-
-    public AgentStateMachine getStateMachine()
-}
-```
-
-### Message
-
-```java
-public class Message {
-    public String getType()
-    public void setType(String type)
-
-    public String getSender()
-    public void setSender(String sender)
-
-    public ApiResponse getPayload()
-    public void setPayload(ApiResponse payload)
-
-    public Map<String, Object> getMetadata()
-
-    public static Builder builder(String type)
-
-    public static class Builder {
-        public Builder sender(String sender)
-        public Builder payload(ApiResponse payload)
-        public Builder metadata(String key, Object value)
-        public Message build()
+public class AzureOpenAIClient implements Client {
+    @Override
+    public ApiResponse execute(
+        Properties properties,
+        String prompt,
+        String responseId
+    ) {
+        // Azure-specific implementation
+        // - Custom authentication headers
+        // - Different endpoint format
+        // - Response schema mapping
+        // - Metrics/tracing instrumentation
+        return apiResponse;
     }
 }
 ```
 
----
+### 3. Custom Action Strategies
 
-## 🔧 Troubleshooting
+Add new action types and strategies:
 
-### Common Issues
-
-#### Issue: `IllegalStateException: Transition not allowed`
-
-**Cause**: Attempted transition not registered in state machine
-
-**Solution**:
 ```java
-orchestrator.addTransition("sourceAgent", "targetAgent");
+// 1. Add to Action enum
+public enum Action {
+    RUN_TOOL_SEQUENTIAL,
+    RUN_TOOL_PARALLEL,
+    ASK_AGENT,
+    FINALIZE_TASK,
+    CUSTOM_ACTION  // New action
+}
+
+// 2. Implement ActionStrategy
+public class CustomActionStrategy implements ActionStrategy {
+    @Override
+    public Message execute(
+        Message message,
+        ApiResponse apiResponse,
+        Agent agent
+    ) throws Exception {
+        // Custom action logic
+        return updatedMessage;
+    }
+}
+
+// 3. Register in ActionStrategyFactory
+ActionStrategyFactory.register(
+    Action.CUSTOM_ACTION,
+    new CustomActionStrategy()
+);
 ```
 
-#### Issue: `Max iterations reached`
+### 4. Custom Tool Discovery
 
-**Cause**: Workflow didn't complete within iteration limit
+Implement `ToolFinder` for alternative discovery mechanisms:
 
-**Solutions**:
-- Increase limit: `.maxIterations(200)`
-- Check for infinite loops in agent logic
-- Ensure agents call `FINALIZE_TASK` when done
-- Review transition patterns for circular dependencies
-
-#### Issue: `No strategy found for action`
-
-**Cause**: LLM returned invalid action string
-
-**Solution**:
-- Improve agent prompt to emphasize valid actions
-- Add retry logic (framework does this automatically)
-- Check LLM model configuration
-
-#### Issue: Agent doesn't finalize
-
-**Cause**: Agent keeps routing to itself or others
-
-**Solutions**:
-- Add explicit finalization criteria in prompt
-- Use `TransitionRule.requireFinalization()`
-- Check `shouldTransition()` logic
-- Monitor finalized agents set
-
-#### Issue: Tool not found
-
-**Cause**: Tool not properly registered or name mismatch
-
-**Solutions**:
 ```java
-// Ensure tool is annotated
-@Tool(name = "MY_TOOL", description = "...")
-public String myTool(...) { }
-
-// Ensure tool instance is attached
-.toolInstance(new MyTools())
-
-// Check tool name in agent response matches annotation
+public class ConfigBasedToolFinder implements ToolFinder {
+    @Override
+    public Method findTool(String toolName, List<Method> methods) {
+        // Load tool mappings from configuration
+        // Support versioning
+        // Enable dynamic tool registration
+        return matchingMethod;
+    }
+}
 ```
 
-#### Issue: Context state not persisting
+## Observability and Logging
 
-**Cause**: State cleared or using wrong key
+### Built-in Logging
 
-**Solutions**:
+Framework uses `java.util.logging.Logger`:
+
 ```java
-// Use namespaced keys
-String key = agentName + "-state-key";
-context.setState(key, value);
+// In AgentOrchestrator
+logger.info("Starting orchestration workflow");
+logger.info(String.format("Iteration %d - Current Agent: %s", iteration, agentName));
+logger.info("Agent finalized: " + agentName);
+logger.warning("Max iterations reached. Stopping orchestration.");
 
-// Avoid clearing unnecessarily
-// context.clearState(); // Only when needed
+// In AgentBuilder
+logger.info("Invalid action: " + action + " - retrying...");
+
+// In TransitionAgent
+logger.warning(String.format("Transition denied: %s -> %s. Reason: %s", from, to, reason));
+logger.info(String.format("Transition allowed: %s -> %s", from, to));
 ```
 
-#### Issue: Intelligent routing not working
+### Configure Logging
 
-**Cause**: Router not attached to state machine
-
-**Solution**:
 ```java
-IntelligentTransitionAgent router = ...;
-orchestrator.getStateMachine().setIntelligentTransitionAgent(router);
+import java.util.logging.*;
+
+// Set log level
+Logger rootLogger = Logger.getLogger("");
+rootLogger.setLevel(Level.INFO);
+
+// Custom formatter
+ConsoleHandler handler = new ConsoleHandler();
+handler.setFormatter(new SimpleFormatter() {
+    @Override
+    public synchronized String format(LogRecord record) {
+        return String.format(
+            "[%s] %s - %s%n",
+            record.getLevel(),
+            record.getLoggerName(),
+            record.getMessage()
+        );
+    }
+});
+rootLogger.addHandler(handler);
 ```
 
-#### Issue: Validation rules not enforced
+### Transition Listeners
 
-**Cause**: Validator not attached or strict mode disabled
-
-**Solution**:
 ```java
-TransitionAgent validator = TransitionAgent.builder()
-    .addValidator(...)
-    .strictMode(true)  // Enable strict enforcement
+orchestrator = AgentOrchestrator.builder(agents)
+    .addTransitionListener((from, to) -> {
+        // Console logging
+        System.out.println(from.getName() + " → " + to.getName());
+
+        // File logging
+        logToFile(from.getName(), to.getName());
+
+        // Metrics collection
+        metrics.increment("transitions",
+            Map.of("from", from.getName(), "to", to.getName()));
+
+        // Distributed tracing
+        span.addEvent("agent_transition",
+            Map.of("from_agent", from.getName(), "to_agent", to.getName()));
+    })
+    .build();
+```
+
+### Monitoring Best Practices
+
+```java
+public class MonitoringOrchestrator {
+    public static void main(String[] args) throws Exception {
+        // Track orchestration metrics
+        long startTime = System.currentTimeMillis();
+        int[] transitionCount = {0};
+
+        AgentOrchestrator orchestrator = AgentOrchestrator.builder(agents)
+            .enableLogging(true)
+            .addTransitionListener((from, to) -> {
+                transitionCount[0]++;
+                System.out.println(String.format(
+                    "Transition #%d: %s → %s (elapsed: %dms)",
+                    transitionCount[0],
+                    from.getName(),
+                    to.getName(),
+                    System.currentTimeMillis() - startTime
+                ));
+            })
+            .build();
+
+        ApiResponse result = orchestrator.process();
+
+        System.out.println("=== Orchestration Summary ===");
+        System.out.println("Total transitions: " + transitionCount[0]);
+        System.out.println("Total duration: " + (System.currentTimeMillis() - startTime) + "ms");
+        System.out.println("Final answer: " + result.getAnswer());
+    }
+}
+```
+
+## Error Handling and Retries
+
+### LLM Call Retries (ChatGptClient)
+
+**Retry Strategy:**
+- **Max Attempts:** 5
+- **Backoff:** Exponential starting at 1 second
+- **Retryable Errors:**
+  - HTTP 429 (rate limit)
+  - IOException
+  - InterruptedException
+
+**Implementation:**
+```java
+int retryCount = 0;
+while (retryCount < 5) {
+    try {
+        return executeHttpCall();
+    } catch (IOException | InterruptedException e) {
+        retryCount++;
+        if (retryCount >= 5) throw e;
+        Thread.sleep(1000 * (long) Math.pow(2, retryCount));
+    } catch (HttpException e) {
+        if (e.getStatusCode() == 429) {
+            retryCount++;
+            Thread.sleep(1000 * (long) Math.pow(2, retryCount));
+        } else if (e.getStatusCode() >= 400) {
+            throw new IllegalStateException("HTTP error: " + e.getStatusCode());
+        }
+    }
+}
+```
+
+### Action Validity Retries (AgentBuilder)
+
+**Retry Strategy:**
+- **Max Attempts:** 5
+- **Validation:** Action string must map to `Action` enum
+- **Failure:** Throws `IllegalStateException` after retries exhausted
+
+**Implementation:**
+```java
+int retryCount = 0;
+while (retryCount < 5) {
+    ApiResponse response = client.execute(properties, prompt, responseId);
+    if (isValidAction(response.getAction())) {
+        return response;
+    }
+    retryCount++;
+    logger.info("Invalid action: " + response.getAction() + " - retrying...");
+}
+throw new IllegalStateException("Failed to get valid action after 5 retries");
+```
+
+### Tool Execution Failures
+
+Tool failures are **captured**, not retried:
+
+```java
+try {
+    Object result = method.invoke(toolInstance, params);
+    return CallableResponse.success(toolName, result);
+} catch (Exception e) {
+    return CallableResponse.error(toolName, e.getMessage());
+}
+```
+
+**Error Propagation:**
+- Errors serialized into `ApiResponse.toolOutput`
+- LLM receives error details in next prompt
+- LLM can retry tool with corrected parameters
+
+### Best Practices
+
+```java
+// 1. Validate configuration before orchestration
+if (Properties.INSTANCE.getOpenAIKey() == null) {
+    throw new IllegalStateException("OpenAI API key not configured");
+}
+
+// 2. Set reasonable iteration limits
+orchestrator.maxIterations(100);  // Prevent infinite loops
+
+// 3. Handle orchestration exceptions
+try {
+    ApiResponse result = orchestrator.process();
+    processResult(result);
+} catch (IllegalStateException e) {
+    logger.severe("Orchestration failed: " + e.getMessage());
+    // Fallback logic
+} catch (Exception e) {
+    logger.severe("Unexpected error: " + e.getMessage());
+    // Error recovery
+}
+
+// 4. Validate tool instances
+if (toolInstance == null) {
+    logger.warning("Agent has no tools configured");
+}
+```
+
+## Known Limitations
+
+### 1. TransitionAgent Strict Mode Partial Enforcement
+**Issue:** In current logic, denied validator results may still lead to allowed transition after loop completion.
+
+**Impact:** Strict mode may not fully prevent forbidden transitions.
+
+**Workaround:** Use transition listeners to enforce additional validation.
+
+### 2. Sequential Tool Strategy Only Returns First Result
+**Issue:** `RunToolSequentialStrategy` serializes only `results.getFirst()` even when multiple tools run.
+
+**Impact:** Subsequent tool results are lost.
+
+**Workaround:** Use `RUN_TOOL_PARALLEL` or make separate sequential calls.
+
+### 3. Shared Mutable Singleton Configuration
+**Issue:** `Properties.INSTANCE` is process-global and not thread/request isolated.
+
+**Impact:** Concurrent orchestrations share same configuration.
+
+**Workaround:** Ensure configuration is set once at startup, not per-request.
+
+### 4. Hardcoded Thread Pool Size
+**Issue:** `DefaultToolRunnerImpl` uses fixed pool size of 50 threads.
+
+**Impact:** No external tuning hook for different workloads.
+
+**Workaround:** Fork implementation and adjust `Executors.newFixedThreadPool(50)`.
+
+### 5. Tight Coupling to Response Schema
+**Issue:** `ChatGptClient` expects specific JSON shape: `output[].content[0].text`.
+
+**Impact:** Incompatible with non-OpenAI response formats.
+
+**Workaround:** Implement custom `Client` interface for different providers.
+
+### 6. No Built-in Persistence/Checkpointing
+**Issue:** Context is in-memory only; no state serialization.
+
+**Impact:** Cannot resume orchestration after crash.
+
+**Workaround:** Implement custom persistence via transition listeners and context state.
+
+### 7. No Tests Included
+**Issue:** Repository has empty `src/test` directory.
+
+**Impact:** No regression protection, unclear behavior edge cases.
+
+**Recommendation:** Add integration and unit tests (see Roadmap).
+
+### 8. External Dependency on ToolLibrary
+**Issue:** Requires `com.grkn:ToolLibrary:1.0-SNAPSHOT` which may not be publicly available.
+
+**Impact:** Build fails without this dependency.
+
+**Workaround:** Install ToolLibrary locally or publish to private Maven repo.
+
+## Troubleshooting
+
+### Maven Dependency Resolution Fails for ToolLibrary
+
+**Symptom:**
+```
+[ERROR] Failed to execute goal on project OrchestrationLLMs:
+Could not resolve dependencies for project com.grkn:OrchestrationLLMs:1.0-SNAPSHOT:
+Could not find artifact com.grkn:ToolLibrary:1.0-SNAPSHOT
+```
+
+**Fix:**
+```bash
+# 1. Install ToolLibrary to local Maven repository
+cd path/to/ToolLibrary
+mvn clean install
+
+# 2. Verify installation
+ls ~/.m2/repository/com/grkn/ToolLibrary/1.0-SNAPSHOT/
+
+# 3. Rebuild this project
+cd path/to/llm-agent-orchestrator
+mvn clean package
+```
+
+**Alternative:** Configure private Maven repository in `~/.m2/settings.xml`.
+
+### LLM Returns Invalid JSON / Invalid Action
+
+**Symptom:**
+```
+INFO: Invalid action: run_tool - retrying...
+INFO: Invalid action: execute_sequential - retrying...
+Exception: Failed to get valid action after 5 retries
+```
+
+**Root Causes:**
+- LLM not following JSON schema
+- Action string doesn't match enum exactly
+- Response parsing error
+
+**Fix:**
+```java
+// 1. Verify model capability
+Properties.INSTANCE.setOpenAIModel("gpt-4");  // Use more capable model
+
+// 2. Tighten prompts with examples
+String customPrompt = """
+Your prompt here...
+
+Example valid response:
+{
+  "action": "RUN_TOOL_SEQUENTIAL",
+  "toolNames": ["read_file"],
+  "inputs": [{"path": "/example.txt"}],
+  "answer": "Reading file"
+}
+""";
+
+// 3. Verify endpoint returns correct format
+// Expected: output[].content[0].text contains JSON string
+```
+
+### Transition Exceptions
+
+**Symptom:**
+```
+Exception: Transition from 'Planner' to 'Reviewer' is not allowed
+```
+
+**Root Cause:** Requested transition not registered in FSM.
+
+**Fix:**
+```java
+// Add missing transition
+orchestrator.addTransition("Planner", "Reviewer");
+
+// OR allow TransitionAgent to auto-route
+// (TransitionAgent will ask LLM to choose appropriate agent)
+
+// OR enable recursive if same agent
+orchestrator.allowRecursive("Planner");
+```
+
+### Null or Missing Tool Execution
+
+**Symptom:**
+```
+toolOutput: {"error": "Tool not found: read_file"}
+```
+
+**Root Causes:**
+- Tool method missing `@Tool` annotation
+- Tool name mismatch
+- Parameter missing `@ToolParameter`
+- Tool instance not attached to agent
+
+**Fix:**
+```java
+// 1. Verify annotation
+@Tool(name = "read_file")  // Must match exactly
+public String readFile(@ToolParameter String path) { ... }
+
+// 2. Verify tool attachment
+Agent agent = AgentBuilder.create("Developer")
+    .toolInstance(new FileTools())  // Don't forget this!
     .build();
 
-stateMachine.setTransitionAgent(validator);
+// 3. Verify LLM uses correct name
+{
+  "action": "RUN_TOOL_SEQUENTIAL",
+  "toolNames": ["read_file"],  // Must match annotation exactly
+  ...
+}
 ```
 
-### Debug Tips
+### Max Iterations Reached
 
-**Enable verbose logging**:
-```java
-orchestrator.enableLogging(true);
+**Symptom:**
+```
+WARNING: Max iterations reached. Stopping orchestration.
 ```
 
-**Add transition listeners**:
+**Root Causes:**
+- Infinite loop between agents
+- No agent finalizing
+- TransitionAgent unable to find appropriate agent
+
+**Fix:**
 ```java
+// 1. Increase limit if workflow is legitimately long
+orchestrator.maxIterations(200);
+
+// 2. Add finalization condition to prompts
+String prompt = """
+You are a Reviewer. After verifying all work is complete,
+you MUST use FINALIZE_TASK action to end the workflow.
+""";
+
+// 3. Debug transition loop with listener
 orchestrator.addTransitionListener((from, to) -> {
-    System.out.printf("[%s] %s -> %s%n",
-        Instant.now(), from.getName(), to.getName());
+    System.out.println(from.getName() + " -> " + to.getName());
+    // Identify ping-pong between same agents
 });
 ```
 
-**Monitor context state**:
+### Memory Issues with Large Contexts
+
+**Symptom:** OutOfMemoryError or slow performance.
+
+**Root Cause:** Context accumulating large objects across iterations.
+
+**Fix:**
 ```java
-.onEnter(context -> {
-    System.out.println("Context state: " + context.getState("debug_info"));
-})
+// Clean up context in onExit
+agent.onExit(context -> {
+    context.setState("largeData", null);  // Clear after use
+});
+
+// Or use weak references for cached data
+Map<String, Object> cache = new WeakHashMap<>();
+context.setState("cache", cache);
 ```
 
-**Track iterations**:
-```java
-.metadata("iteration", currentIteration)
+## Roadmap Suggestions
+
+High-impact improvements for evolving this project:
+
+### 1. Add Comprehensive Tests
+**Priority:** 🔴 Critical
+
+```
+- Unit tests for core classes (AgentStateMachine, AgentBuilder, etc.)
+- Integration tests for orchestration workflows
+- Mock LLM client for deterministic testing
+- Tool execution tests
+- Transition validation tests
 ```
 
----
+### 2. Externalize Configuration
+**Priority:** 🟡 High
 
-## ⚡ Performance & Optimization
-
-### Performance Considerations
-
-#### 1. Use Parallel Execution
-
-```java
-// ❌ Slow: Sequential when independent
-{
-  "action": "RUN_TOOL_SEQUENTIAL",
-  "toolNames": ["READ_FILE", "READ_FILE", "READ_FILE"]
-}
-
-// ✅ Fast: Parallel for independent operations
-{
-  "action": "RUN_TOOL_PARALLEL",
-  "toolNames": ["READ_FILE", "READ_FILE", "READ_FILE"]
-}
+```
+- Replace Properties singleton with per-orchestration config
+- Support multiple LLM providers simultaneously
+- Environment-specific configuration (dev/staging/prod)
+- Configurable retry/backoff parameters
+- Configurable thread pool sizing
 ```
 
-#### 2. Optimize Iteration Limits
+### 3. Add Structured Telemetry
+**Priority:** 🟡 High
 
-```java
-// Balance between completion and performance
-.maxIterations(50)  // Good for most workflows
-
-// Too high = waste if stuck
-.maxIterations(1000)  // ❌
-
-// Too low = premature termination
-.maxIterations(5)  // ❌
+```
+- OpenTelemetry integration
+- Metrics: transition counts, duration, tool execution times
+- Distributed tracing across agent boundaries
+- Custom span attributes for agent metadata
+- Prometheus exporter
 ```
 
-#### 3. Cache LLM Responses
+### 4. Harden Transition Validation
+**Priority:** 🟡 High
 
-```java
-// Custom client with caching
-public class CachedLLMClient implements Client {
-    private final Cache<String, ApiResponse> cache = ...;
-
-    @Override
-    public ApiResponse execute(Properties props, String prompt, String responseId) {
-        String cacheKey = hash(prompt);
-        return cache.get(cacheKey, key -> {
-            return realClient.execute(props, prompt, responseId);
-        });
-    }
-}
+```
+- Fix strict mode semantics
+- Add transition pre-conditions and post-conditions
+- Circuit breaker for failing transitions
+- Transition timeout support
+- Better error messages for denied transitions
 ```
 
-#### 4. Optimize Prompts
+### 5. Pluggable Prompt Templates
+**Priority:** 🟢 Medium
 
-```java
-// ❌ Too verbose
-"""
-You are a very experienced, highly skilled, world-class expert senior
-software engineer with 20 years of experience in Java, Spring, Hibernate...
-[500 more words]
-"""
-
-// ✅ Concise and clear
-"""
-# Role: Senior Java Developer
-# Responsibilities:
-- Implement features
-- Write tests
-- Review code
-"""
+```
+- Template engine integration (Mustache, Freemarker)
+- Per-agent custom templates
+- Template versioning
+- Multi-language template support
+- Prompt optimization tools
 ```
 
-#### 5. Limit Tool Calls
+### 6. Immutable Per-Run Configuration
+**Priority:** 🟢 Medium
 
-```java
-// Guide agents to batch operations
-"""
-When creating multiple files, use RUN_TOOL_PARALLEL with multiple
-CREATE_FILE calls instead of calling CREATE_FILE multiple times.
-"""
+```
+- Builder-based orchestration config
+- Thread-safe multi-tenant support
+- Configuration validation at build time
+- Configuration snapshots for auditing
 ```
 
-### Monitoring
+### 7. Streaming Response Support
+**Priority:** 🟢 Medium
 
-```java
-public class PerformanceMonitor implements TransitionListener {
-    private final Map<String, Long> agentTimes = new ConcurrentHashMap<>();
-    private long transitionStart;
-
-    @Override
-    public void onTransition(Agent from, Agent to) {
-        long now = System.currentTimeMillis();
-
-        if (transitionStart > 0) {
-            long duration = now - transitionStart;
-            agentTimes.merge(from.getName(), duration, Long::sum);
-        }
-
-        transitionStart = now;
-    }
-
-    public void printStats() {
-        System.out.println("=== Agent Performance ===");
-        agentTimes.forEach((agent, time) -> {
-            System.out.printf("%s: %dms%n", agent, time);
-        });
-    }
-}
-
-// Usage
-PerformanceMonitor monitor = new PerformanceMonitor();
-orchestrator.addTransitionListener(monitor);
-orchestrator.process();
-monitor.printStats();
+```
+- SSE (Server-Sent Events) support
+- Reactive streams integration
+- Partial response handling
+- Real-time progress updates
+- Streaming tool output
 ```
 
----
+### 8. Enhanced Tool System
+**Priority:** 🟢 Medium
 
-## 🗺️ Roadmap
+```
+- Tool versioning and deprecation
+- Tool composition (tool calling tools)
+- Tool execution sandboxing
+- Tool rate limiting
+- Tool metrics and profiling
+```
 
-### Completed ✅
+### 9. Persistence and Checkpointing
+**Priority:** 🔵 Low
 
-- [x] Multi-agent orchestration with FSM
-- [x] Agent-to-agent communication and delegation
-- [x] Tool integration (file operations, Maven builds)
-- [x] Action strategies (sequential, parallel, delegation, finalization)
-- [x] Intelligent transition agent with LLM-powered routing
-- [x] Transition validation rules and custom validators
-- [x] Context-aware agent decision making
-- [x] Lifecycle hooks (onEnter, onExit)
-- [x] Builder pattern for agent configuration
-- [x] Transition listeners for observability
-- [x] Finalized agent tracking
-- [x] Per-agent state isolation
-- [x] Simplified agent process method architecture
-- [x] Structured prompt engineering
+```
+- Serialize orchestration state
+- Resume from checkpoint
+- State machine snapshots
+- Audit trail of transitions
+- Replay capabilities
+```
 
-### In Progress 🚧
+### 10. Developer Experience
+**Priority:** 🔵 Low
 
-- [ ] Comprehensive test suite
-- [ ] Performance benchmarking tools
-- [ ] Enhanced error recovery mechanisms
+```
+- CLI for testing agents
+- Visual orchestration builder
+- Agent debugging tools
+- Performance profiler
+- Documentation generator from code
+```
 
-### Planned 📅
+## License
 
-**Q2 2024:**
-- [ ] Async/reactive agent execution
-- [ ] State persistence layer (Redis, Database)
-- [ ] Streaming LLM responses
-- [ ] Agent behavior testing utilities
+No license file is currently present in this repository.
 
-**Q3 2024:**
-- [ ] Multiple LLM provider support (Claude, Gemini, local models)
-- [ ] Visual workflow designer (web UI)
-- [ ] Agent performance metrics dashboard
-- [ ] Workflow templates library
+**Recommendation:** Add a `LICENSE` file to define usage terms.
 
-**Q4 2024:**
-- [ ] Web UI for monitoring agent interactions
-- [ ] Distributed agent execution
-- [ ] A/B testing framework for agent prompts
-- [ ] Agent learning and optimization
+**Common Options:**
+- **MIT** - Permissive, allows commercial use
+- **Apache 2.0** - Permissive, includes patent grant
+- **GPL-3.0** - Copyleft, derivatives must be open source
 
-**Future:**
-- [ ] Agent marketplace for pre-built agents
-- [ ] Natural language workflow definition
-- [ ] Multi-modal agent support (vision, audio)
-- [ ] Integration with popular frameworks (Spring, Quarkus)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for improvement:
-
-### High Priority
-- Additional built-in tools (Git, Docker, Kubernetes, AWS, etc.)
-- Enhanced error recovery mechanisms
-- Support for streaming LLM responses
-- Agent behavior testing utilities
-- Performance optimizations
-
-### Medium Priority
-- Documentation improvements
-- Example workflows (DevOps, data science, content creation)
-- Integration with popular frameworks
-- UI components
-
-### How to Contribute
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### Development Setup
-
+**Add License:**
 ```bash
-# Clone repository
-git clone https://github.com/grkn/llm-agent-orchestrator.git
-cd llm-agent-orchestrator
-
-# Build
-mvn clean install
-
-# Run tests
-mvn test
-
-# Run example
-mvn exec:java -Dexec.mainClass="com.grkn.orchestration.example.YourExample"
-```
-
-### Code Style
-
-- Follow Java conventions
-- Add Javadoc for public APIs
-- Include unit tests for new features
-- Update README with new features
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Gürkan (@grkn)**
-
-- GitHub: [@grkn](https://github.com/grkn)
-- Repository: [llm-agent-orchestrator](https://github.com/grkn/llm-agent-orchestrator)
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by multi-agent systems research
-- Built with Java 21 and modern patterns
-- Powered by LLM technology
-
----
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/grkn/llm-agent-orchestrator/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/grkn/llm-agent-orchestrator/discussions)
-- **Email**: [Contact via GitHub](https://github.com/grkn)
-
----
-
-## ⚠️ Important Notes
-
-### Production Deployment
-
-- **API Key Security**: Never commit API keys. Use environment variables or secret management.
-- **Rate Limiting**: Implement rate limiting for LLM API calls.
-- **Cost Monitoring**: LLM calls can be expensive. Monitor usage.
-- **Error Handling**: Implement comprehensive error handling and retry logic.
-- **Logging**: Enable detailed logging for debugging production issues.
-
-### Best Practices for Production
-
-```java
-// ✅ Use environment variables
-String apiKey = System.getenv("OPENAI_API_KEY");
-Properties.INSTANCE.setOpenAIKey(apiKey);
-
-// ✅ Implement rate limiting
-RateLimiter limiter = RateLimiter.create(10.0); // 10 requests/second
-limiter.acquire();
-response = client.execute(...);
-
-// ✅ Monitor costs
-logger.info("LLM call cost: $" + estimateCost(prompt, model));
-
-// ✅ Set reasonable timeouts
-.maxIterations(100)  // Prevent runaway workflows
-
-// ✅ Add comprehensive error handling
-try {
-    orchestrator.process();
-} catch (IllegalStateException e) {
-    logger.error("State transition error", e);
-    notifyOps(e);
-} catch (Exception e) {
-    logger.error("Unexpected error", e);
-    rollback();
-}
+# Create LICENSE file with your chosen license text
+echo "MIT License" > LICENSE
+echo "" >> LICENSE
+echo "Copyright (c) $(date +%Y) Your Name" >> LICENSE
+# ... add full license text
 ```
 
 ---
 
-**Ready to build intelligent agent systems? Get started with the [Quick Start](#quick-start) guide!**
+## Contributing
 
+Contributions are welcome! This framework is designed to be extensible.
+
+**Areas for Contribution:**
+- Add tests (unit, integration, E2E)
+- Improve error handling and validation
+- Add examples and tutorials
+- Implement additional action strategies
+- Create tool library integrations
+- Improve documentation
+
+---
+
+## Support
+
+For issues, questions, or feature requests, please open an issue on the repository.
+
+---
+
+**Built with Java 21 | Powered by LLM Orchestration**

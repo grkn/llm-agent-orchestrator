@@ -1,15 +1,10 @@
 package com.grkn.orchestration.llms.orchestrator;
 
-import com.grkn.orchestration.llms.core.ChatGptClient;
 import com.grkn.orchestration.llms.dto.ApiResponse;
 import com.grkn.orchestration.llms.enums.Action;
 import com.grkn.orchestration.llms.fsm.Agent;
-import com.grkn.orchestration.llms.fsm.AgentBuilder;
 import com.grkn.orchestration.llms.fsm.AgentStateMachine;
 import com.grkn.orchestration.llms.fsm.Message;
-import com.grkn.orchestration.llms.interfaces.Client;
-import com.grkn.orchestration.llms.properties.Properties;
-import com.grkn.orchestration.llms.tools.Tools;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +17,6 @@ import java.util.logging.Logger;
  */
 public class AgentOrchestrator {
     private static final Logger logger = Logger.getLogger(AgentOrchestrator.class.getName());
-    private Client client = ChatGptClient.INSTANCE;
     public static final String mainPrompt = """
             Your Role and Goal:
             %s

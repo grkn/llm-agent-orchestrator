@@ -61,17 +61,6 @@ public class AgentBuilder {
         return this;
     }
 
-    /**
-     * Sets the instance of the tool class.
-     *
-     * @param instance of the tool class
-     * @return this builder for chaining
-     */
-    public AgentBuilder name(Object instance) {
-        this.toolClassInstance = instance;
-        return this;
-    }
-
     public AgentBuilder prompt(String prompt) {
         this.prompt = prompt;
         return this;

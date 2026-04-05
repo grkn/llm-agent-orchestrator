@@ -6,6 +6,7 @@ import com.grkn.orchestration.llms.properties.Properties;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -125,16 +126,17 @@ public class TransitionAgent {
                         - Decision message should be done based responsibility of agents
                         - You will choose the agent with the highest responsibility ratio than other agents.
                         - You can not choose current agent.
-                        - You have to choose one agent except current agent.
+                        - You have to choose one agent except current agent or finalized task agents.
                         
                         
                         Available agents with prompt:
                         %s
                         
-                        
                         Current agent:
                         %s
                         
+                        Finalized task agents:
+                        %s
                         
                         Decision Message:
                         %s
@@ -147,6 +149,7 @@ public class TransitionAgent {
                         """.formatted(
                         availableAgents(context),
                         fromAgent.getName(),
+                        finalizedAgents((Set<String>) message.getMetadata("finalizedAgents")),
                         message.getPayload().getAnswer()), (String) context.getState("transitionAgent-response-id"));
                 if (response == null || response.getAgentName() == null || response.getAgentName().isEmpty()) {
                     return TransitionValidationResult
@@ -160,6 +163,18 @@ public class TransitionAgent {
             }
             
             return TransitionValidationResult.allow(toAgent.getName());
+        }
+
+        private String finalizedAgents(Set<String> finalizedAgents) {
+            if (finalizedAgents == null || finalizedAgents.isEmpty()) {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (String finalizedAgent : finalizedAgents) {
+                sb.append("- ").append(finalizedAgent).append("\n");
+            }
+            return sb.toString();
         }
 
         private String availableAgents(AgentContext context) {

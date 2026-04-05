@@ -19,7 +19,7 @@ public class AgentOrchestrator {
             Your Role and Goal:
             %s
             
-            Only Available Tools:
+            Available Tools: (You can use these tools when action is RUN_TOOL_*)
             %s
             
             Current Sub Task:
@@ -33,14 +33,14 @@ public class AgentOrchestrator {
             
             You must respond with ONLY a valid JSON object. Analyze the current task and choose ONE action in available actions:
             
-            Only Available Actions:
+            Action must be one of the following:
             - RUN_TOOL_SEQUENTIAL
             - RUN_TOOL_PARALLEL
             - ASK_AGENT
             - FINALIZE_TASK
             
             
-            Action Types Description:
+            Available Actions:
             1. RUN_TOOL_SEQUENTIAL: - Execute tools one after another when:
                - Tools are independent and don't depend on each other
                - Multiple similar operations needed sequentially

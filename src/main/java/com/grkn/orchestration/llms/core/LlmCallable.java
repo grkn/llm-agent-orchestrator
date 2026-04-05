@@ -66,7 +66,7 @@ public class LlmCallable implements Callable<CallableResponse> {
         try {
             Object result = toolMethod.invoke(toolInstance, instance);
             return new CallableResponse(result, true, toolName, null);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (Exception e) {
             return new CallableResponse(null, false, toolName, "Tool execution failed: " + e.getMessage());
         }
     }

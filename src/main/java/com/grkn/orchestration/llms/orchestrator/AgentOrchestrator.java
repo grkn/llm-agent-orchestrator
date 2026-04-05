@@ -139,16 +139,11 @@ public class AgentOrchestrator {
             }
 
             if (enableLogging) {
-                logger.info(stateMachine.getCurrentAgent().getName() + "'s turn to act: " + currentMessage);
+                logger.info(stateMachine.getCurrentAgent().getName() + "'s turn to act: " + currentMessage.getPayload());
             }
 
             // Process message through current agent
             currentMessage = stateMachine.processMessage(currentMessage);
-
-            if (enableLogging) {
-                logger.info(stateMachine.getCurrentAgent().getName() + "'s response: " + currentMessage);
-            }
-
 
             // Check if task is finalized
             if (isTaskComplete(currentMessage)) {

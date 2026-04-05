@@ -92,7 +92,6 @@ public class ApiResponse {
                 "action='" + action + '\'' +
                 ", agentName='" + agentName + '\'' +
                 ", toolNames='" + toolNames + '\'' +
-                ", inputs='" + inputs + '\'' +
                 ", answer='" + answer + '\'' +
                 ", toolOutput='" + toolOutput + '\'' +
                 ", responseId='" + responseId + '\'' +

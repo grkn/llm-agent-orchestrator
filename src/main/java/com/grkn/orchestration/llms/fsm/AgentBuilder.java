@@ -149,7 +149,7 @@ public class AgentBuilder {
                 );
             }
 
-            private ApiResponse executeWithRetry(String prompt, AgentContext context) throws Exception {
+            private ApiResponse executeWithRetry(String prompt, AgentContext context) {
                 ApiResponse apiResponse = null;
                 String responseIdKey = this.getName() + "-api-response-id";
                 int retryCount = 0;

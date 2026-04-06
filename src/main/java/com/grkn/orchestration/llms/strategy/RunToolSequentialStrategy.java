@@ -7,14 +7,11 @@ import com.grkn.orchestration.llms.enums.Action;
 import com.grkn.orchestration.llms.fsm.AbstractAgent;
 import com.grkn.orchestration.llms.fsm.Message;
 import com.grkn.orchestration.llms.interfaces.ToolRunner;
-import tools.jackson.core.JsonParser;
 import tools.jackson.core.json.JsonReadFeature;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.core.util.JacksonFeature;
-import tools.jackson.core.util.JacksonFeatureSet;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -47,16 +44,16 @@ public class RunToolSequentialStrategy implements ActionStrategy {
         List<Map<String, String>> inputs = apiResponse.getInputs();
 
         List<CallableResponse> results = toolRunner.run(Action.RUN_TOOL_SEQUENTIAL, toolNames, inputs ,abstractAgent);
-
-        CallableResponse response = results.getFirst();
-
-        if (response.isSuccess()) {
-            message.getPayload().setToolOutput(objectMapper.writeValueAsString(response.getResponse()));
-        } else {
-            message.getPayload().setToolOutput(objectMapper.writeValueAsString(response.getError()));
+        List<Object> actualResults = new ArrayList<>();
+        for (CallableResponse result : results) {
+            if (result.isSuccess()) {
+                actualResults.add(result.getResponse());
+            } else {
+                actualResults.add(result.getError());
+            }
         }
 
-
+        message.getPayload().setToolOutput(objectMapper.writeValueAsString(actualResults));
         return message;
     }
 }

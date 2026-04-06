@@ -16,13 +16,12 @@ import java.util.logging.Logger;
 public class AgentOrchestrator {
     private static final Logger logger = Logger.getLogger(AgentOrchestrator.class.getName());
     public static final String mainPrompt = """
-            Your Role and Goal:
             %s
             
             Available Tools: (You can use these tools when action is RUN_TOOL_*)
             %s
             
-            Current Sub Task:
+            Current Task:
             %s
             
             Available Agents:
@@ -64,11 +63,13 @@ public class AgentOrchestrator {
                - No further actions are needed
             
             Important Rules:
-            - Always keep the main goal in focus, even when handling sub-tasks
-            - If you receive a new question or work item, treat it as a priority sub-task
+            - Always keep the current task in focus, even when handling current task
+            - If you receive a task, treat it as a priority sub-task
             - Choose the most efficient action based on the current situation
             - Only use tools that are listed in the "Available Tools" section
             - For ASK_AGENT, specify the target agent name and your question in the "answer" field
+            - For FINALIZE_TASK, specify the final result in the "answer" field
+            - For RUN_TOOL_SEQUENTIAL and RUN_TOOL_PARALLEL, specify the toolName and inputs in the "toolNames" and "inputs" fields, respectively
             
             
             Required JSON Response Format:
@@ -92,7 +93,7 @@ public class AgentOrchestrator {
             - agentName (required for ASK_AGENT): Name of the agent you want to delegate to
             - toolOutput (system-managed): Tool execution results (you will see this in subsequent iterations)
             
-            Now, analyze the current task and respond with your JSON decision.
+            Now, analyze the current task or goal and respond with your JSON decision.
             """;
 
     private final AgentStateMachine stateMachine;
